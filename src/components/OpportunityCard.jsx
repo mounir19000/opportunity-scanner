@@ -1,16 +1,13 @@
-import React from 'react';
+import React from "react";
 import {
   Calendar,
   MapPin,
   DollarSign,
-  ExternalLink,
   Bookmark,
   BookmarkCheck,
-  Building2,
   GitBranch,
-  Sparkles,
   ArrowUpRight,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function OpportunityCard({
   opportunity,
@@ -32,54 +29,46 @@ export default function OpportunityCard({
 
   // Type styling
   const getTypeBadge = (t) => {
-    const lower = (t || '').toLowerCase();
-    if (lower.includes('summer school') || lower.includes('winter school'))
+    const lower = (t || "").toLowerCase();
+    if (lower.includes("summer school") || lower.includes("winter school"))
       return {
-        strip: 'bg-violet-500',
-        badge: 'bg-violet-500/10 text-violet-300 border-violet-500/30',
-        accent: 'from-violet-500/20 to-transparent',
+        strip: "bg-violet-500",
+        badge: "bg-violet-500/10 text-violet-300 border-violet-500/30",
+        accent: "from-violet-500/20 to-transparent",
       };
-    if (lower.includes('internship') || lower.includes('co-op'))
+    if (lower.includes("internship") || lower.includes("co-op"))
       return {
-        strip: 'bg-blue-500',
-        badge: 'bg-blue-500/10 text-blue-300 border-blue-500/30',
-        accent: 'from-blue-500/20 to-transparent',
+        strip: "bg-blue-500",
+        badge: "bg-blue-500/10 text-blue-300 border-blue-500/30",
+        accent: "from-blue-500/20 to-transparent",
       };
-    if (lower.includes('scholarship') || lower.includes('grant'))
+    if (lower.includes("scholarship") || lower.includes("grant"))
       return {
-        strip: 'bg-emerald-500',
-        badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
-        accent: 'from-emerald-500/20 to-transparent',
+        strip: "bg-emerald-500",
+        badge: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+        accent: "from-emerald-500/20 to-transparent",
       };
-    if (lower.includes('fellowship') || lower.includes('residency'))
+    if (lower.includes("fellowship") || lower.includes("residency"))
       return {
-        strip: 'bg-amber-500',
-        badge: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-        accent: 'from-amber-500/20 to-transparent',
+        strip: "bg-amber-500",
+        badge: "bg-amber-500/10 text-amber-300 border-amber-500/30",
+        accent: "from-amber-500/20 to-transparent",
       };
-    if (lower.includes('research') || lower.includes('reu'))
+    if (lower.includes("research") || lower.includes("reu"))
       return {
-        strip: 'bg-cyan-500',
-        badge: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
-        accent: 'from-cyan-500/20 to-transparent',
+        strip: "bg-cyan-500",
+        badge: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30",
+        accent: "from-cyan-500/20 to-transparent",
       };
     return {
-      strip: 'bg-slate-500',
-      badge: 'bg-slate-500/10 text-slate-300 border-slate-500/30',
-      accent: 'from-slate-500/20 to-transparent',
+      strip: "bg-slate-500",
+      badge: "bg-slate-500/10 text-slate-300 border-slate-500/30",
+      accent: "from-slate-500/20 to-transparent",
     };
   };
 
   const style = getTypeBadge(type);
-
-  // Funding status indicator
-  const hasStipend =
-    stipend &&
-    !stipend.toLowerCase().includes('fee required') &&
-    !stipend.toLowerCase().includes('not available') &&
-    !stipend.toLowerCase().includes('na');
-
-  const repoDisplayName = typeof sourceRepo === 'string' ? sourceRepo : (sourceRepo?.name || 'GitHub');
+  const repoDisplayName = typeof sourceRepo === "string" ? sourceRepo : (sourceRepo?.name || "GitHub");
 
   return (
     <div
@@ -93,26 +82,24 @@ export default function OpportunityCard({
       <div>
         <div className="flex items-center justify-between gap-2 mb-2.5 pl-1">
           <div className="flex items-center gap-2 min-w-0">
-            {/* Host Monogram */}
             <div className="w-6 h-6 rounded-md bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-[10px] font-mono font-bold text-slate-300 shrink-0">
-              {(host || 'O').charAt(0).toUpperCase()}
+              {(host || "O").charAt(0).toUpperCase()}
             </div>
             <span className="font-mono text-xs text-slate-400 truncate max-w-[170px]">
-              {host || 'Verified Organization'}
+              {host || "Verified Organization"}
             </span>
           </div>
 
-          {/* Bookmark Button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onToggleSave(opportunity);
             }}
-            title={isSaved ? 'Remove from saved' : 'Save opportunity'}
+            title={isSaved ? "Remove from saved" : "Save opportunity"}
             className={`p-1.5 rounded-lg border transition ${
               isSaved
-                ? 'border-brand-500 bg-brand-500/20 text-brand-400'
-                : 'border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.05]'
+                ? "border-brand-500 bg-brand-500/20 text-brand-400"
+                : "border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.05]"
             }`}
           >
             {isSaved ? <BookmarkCheck className="w-4 h-4 text-brand-400 fill-brand-400/30" /> : <Bookmark className="w-4 h-4" />}
@@ -127,7 +114,7 @@ export default function OpportunityCard({
         {/* Type & Category Pills */}
         <div className="flex flex-wrap items-center gap-1.5 mb-3 pl-1">
           <span className={`font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full border ${style.badge}`}>
-            {type || 'Opportunity'}
+            {type || "Opportunity"}
           </span>
           {category && (
             <span className="text-[10px] text-slate-400 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-md truncate max-w-[160px]">
@@ -138,26 +125,22 @@ export default function OpportunityCard({
 
         {/* Key Metrics Strip (Stipend & Deadline) */}
         <div className="space-y-1.5 pl-1 mb-4 text-xs font-mono">
-          {/* Stipend / Aid */}
           <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
             <DollarSign className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate font-semibold text-[11px]">
-              {stipend || 'Check site (Stipend / Free tuition / Aid)'}
+              {stipend || "Check site (Stipend / Free tuition / Aid)"}
             </span>
           </div>
 
-          {/* Deadline & Location row */}
           <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-            {/* Deadline */}
             <div className="flex items-center gap-1 text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md truncate">
               <Calendar className="w-3 h-3 shrink-0" />
-              <span className="truncate">{deadline || 'Rolling'}</span>
+              <span className="truncate">{deadline || "Rolling"}</span>
             </div>
 
-            {/* Location */}
             <div className="flex items-center gap-1 text-slate-300 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-md truncate">
               <MapPin className="w-3 h-3 text-rose-400 shrink-0" />
-              <span className="truncate">{location || 'Online / Global'}</span>
+              <span className="truncate">{location || "Online / Global"}</span>
             </div>
           </div>
         </div>
