@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, Bookmark, BookmarkCheck, ArrowUpDown } from 'lucide-react';
+import { ExternalLink, Bookmark, BookmarkCheck, ArrowUpDown, ArrowUpRight } from 'lucide-react';
 
 export default function OpportunityTable({
   opportunities,
@@ -10,25 +10,25 @@ export default function OpportunityTable({
   onSort,
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm">
-      <table className="w-full text-left text-xs sm:text-sm">
-        <thead className="bg-slate-100/70 dark:bg-slate-800/70 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[11px]">
+    <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-md shadow-lg">
+      <table className="w-full text-left text-xs">
+        <thead className="bg-slate-800/60 text-slate-300 font-mono font-semibold border-b border-white/[0.08] uppercase tracking-wider text-[10px]">
           <tr>
             <th className="py-3 px-3 w-10 text-center">Save</th>
             <th
               onClick={() => onSort('title')}
-              className="py-3 px-4 cursor-pointer hover:text-brand-500 transition select-none"
+              className="py-3 px-4 cursor-pointer hover:text-brand-400 transition select-none"
             >
-              <div className="flex items-center gap-1">
-                <span>Opportunity & Host</span>
+              <div className="flex items-center gap-1.5">
+                <span>Program & Host</span>
                 <ArrowUpDown className="w-3 h-3 opacity-60" />
               </div>
             </th>
             <th
               onClick={() => onSort('type')}
-              className="py-3 px-3 cursor-pointer hover:text-brand-500 transition select-none"
+              className="py-3 px-3 cursor-pointer hover:text-brand-400 transition select-none"
             >
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <span>Type</span>
                 <ArrowUpDown className="w-3 h-3 opacity-60" />
               </div>
@@ -36,27 +36,30 @@ export default function OpportunityTable({
             <th className="py-3 px-3">Location</th>
             <th
               onClick={() => onSort('deadline')}
-              className="py-3 px-3 cursor-pointer hover:text-brand-500 transition select-none"
+              className="py-3 px-3 cursor-pointer hover:text-brand-400 transition select-none"
             >
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <span>Deadline</span>
                 <ArrowUpDown className="w-3 h-3 opacity-60" />
               </div>
             </th>
-            <th className="py-3 px-3">Stipend / Aid</th>
-            <th className="py-3 px-3">Source Repo</th>
-            <th className="py-3 px-3 text-right">Action</th>
+            <th className="py-3 px-3">Compensation / Aid</th>
+            <th className="py-3 px-3">Source Repository</th>
+            <th className="py-3 px-4 text-right">Apply</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+        <tbody className="divide-y divide-white/[0.04]">
           {opportunities.map((item) => {
             const isSaved = savedIds.has(item.id);
+            const repoDisplayName = typeof item.sourceRepo === 'string' ? item.sourceRepo : (item.sourceRepo?.name || 'GitHub');
+
             return (
               <tr
                 key={item.id}
                 onClick={() => onSelect(item)}
-                className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
+                className="hover:bg-slate-800/40 transition-colors cursor-pointer group"
               >
+                {/* Save button */}
                 <td
                   className="py-3 px-3 text-center"
                   onClick={(e) => {
@@ -65,61 +68,76 @@ export default function OpportunityTable({
                   }}
                 >
                   <button
-                    className={`p-1 rounded transition ${
+                    className={`p-1.5 rounded-lg border transition ${
                       isSaved
-                        ? 'text-brand-600 dark:text-brand-400'
-                        : 'text-slate-300 hover:text-slate-500'
+                        ? 'border-brand-500 bg-brand-500/20 text-brand-400'
+                        : 'border-transparent text-slate-500 hover:text-white hover:bg-slate-800'
                     }`}
                   >
-                    {isSaved ? (
-                      <BookmarkCheck className="w-4 h-4 fill-current" />
-                    ) : (
-                      <Bookmark className="w-4 h-4" />
-                    )}
+                    {isSaved ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
                   </button>
                 </td>
-                <td className="py-3 px-4 max-w-xs">
-                  <div className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 truncate">
+
+                {/* Title & Host */}
+                <td className="py-3 px-4">
+                  <div className="font-display font-semibold text-slate-100 group-hover:text-brand-400 transition line-clamp-1">
                     {item.title}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                    {item.host}
-                  </div>
+                  {item.host && (
+                    <div className="text-[11px] font-mono text-slate-400 truncate max-w-xs">
+                      {item.host}
+                    </div>
+                  )}
                 </td>
+
+                {/* Type */}
                 <td className="py-3 px-3 whitespace-nowrap">
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/[0.06]">
                     {item.type || 'Program'}
                   </span>
                 </td>
-                <td className="py-3 px-3 max-w-[140px] truncate text-slate-600 dark:text-slate-400">
-                  {item.location || 'Remote / Check'}
+
+                {/* Location */}
+                <td className="py-3 px-3 text-slate-300 font-mono text-[11px] whitespace-nowrap max-w-[130px] truncate">
+                  {item.location || 'Online'}
                 </td>
-                <td className="py-3 px-3 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">
-                  {item.deadline || 'TBA'}
+
+                {/* Deadline */}
+                <td className="py-3 px-3 whitespace-nowrap">
+                  <span className="font-mono text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    {item.deadline || 'Rolling'}
+                  </span>
                 </td>
-                <td className="py-3 px-3 max-w-[160px] truncate text-emerald-600 dark:text-emerald-400 font-medium">
-                  {item.stipend || 'Funded'}
+
+                {/* Stipend */}
+                <td className="py-3 px-3 font-mono text-[11px] text-emerald-400 max-w-[160px] truncate">
+                  {item.stipend || 'Check site'}
                 </td>
-                <td className="py-3 px-3 max-w-[130px] truncate text-slate-400 text-xs">
+
+                {/* Source Repo */}
+                <td className="py-3 px-3 font-mono text-[11px] text-slate-400 max-w-[150px] truncate">
                   <a
-                    href={item.sourceRepo?.url}
+                    href={`https://github.com/${repoDisplayName}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="hover:underline hover:text-brand-500"
+                    className="hover:text-brand-400 hover:underline"
                   >
-                    {item.sourceRepo?.name}
+                    {repoDisplayName}
                   </a>
                 </td>
-                <td className="py-3 px-3 text-right whitespace-nowrap">
+
+                {/* Action Link */}
+                <td className="py-3 px-4 text-right whitespace-nowrap">
                   <a
-                    href={item.url}
+                    href={item.url || `https://github.com/${repoDisplayName}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 rounded-md transition"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-brand-500/10 text-brand-300 border border-brand-500/30 hover:bg-brand-500 hover:text-white transition"
                   >
-                    Apply <ExternalLink className="w-3 h-3" />
+                    <span>Visit</span>
+                    <ArrowUpRight className="w-3 h-3" />
                   </a>
                 </td>
               </tr>

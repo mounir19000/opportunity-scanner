@@ -8,7 +8,8 @@ import {
   BookmarkCheck,
   Building2,
   GitBranch,
-  GraduationCap
+  Sparkles,
+  ArrowUpRight,
 } from 'lucide-react';
 
 export default function OpportunityCard({
@@ -25,161 +26,166 @@ export default function OpportunityCard({
     location,
     deadline,
     stipend,
-    eligibility,
     url,
     sourceRepo,
   } = opportunity;
 
   // Type styling
-  const getTypeColor = (t) => {
+  const getTypeBadge = (t) => {
     const lower = (t || '').toLowerCase();
     if (lower.includes('summer school') || lower.includes('winter school'))
-      return 'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 border-violet-200 dark:border-violet-800';
-    if (lower.includes('internship'))
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-    if (lower.includes('scholarship'))
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
-    if (lower.includes('fellowship') || lower.includes('grant'))
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+      return {
+        strip: 'bg-violet-500',
+        badge: 'bg-violet-500/10 text-violet-300 border-violet-500/30',
+        accent: 'from-violet-500/20 to-transparent',
+      };
+    if (lower.includes('internship') || lower.includes('co-op'))
+      return {
+        strip: 'bg-blue-500',
+        badge: 'bg-blue-500/10 text-blue-300 border-blue-500/30',
+        accent: 'from-blue-500/20 to-transparent',
+      };
+    if (lower.includes('scholarship') || lower.includes('grant'))
+      return {
+        strip: 'bg-emerald-500',
+        badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+        accent: 'from-emerald-500/20 to-transparent',
+      };
+    if (lower.includes('fellowship') || lower.includes('residency'))
+      return {
+        strip: 'bg-amber-500',
+        badge: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+        accent: 'from-amber-500/20 to-transparent',
+      };
     if (lower.includes('research') || lower.includes('reu'))
-      return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800';
-    return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+      return {
+        strip: 'bg-cyan-500',
+        badge: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
+        accent: 'from-cyan-500/20 to-transparent',
+      };
+    return {
+      strip: 'bg-slate-500',
+      badge: 'bg-slate-500/10 text-slate-300 border-slate-500/30',
+      accent: 'from-slate-500/20 to-transparent',
+    };
   };
 
+  const style = getTypeBadge(type);
+
   // Funding status indicator
-  const isFunded =
+  const hasStipend =
     stipend &&
     !stipend.toLowerCase().includes('fee required') &&
     !stipend.toLowerCase().includes('not available') &&
     !stipend.toLowerCase().includes('na');
 
+  const repoDisplayName = typeof sourceRepo === 'string' ? sourceRepo : (sourceRepo?.name || 'GitHub');
+
   return (
-    <div className="group relative flex flex-col justify-between rounded-xl border border-slate-200/90 dark:border-slate-800/90 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 sm:p-5 shadow-sm transition-all duration-200 hover:shadow-lg hover:border-brand-500/50 dark:hover:border-brand-500/50">
-      {/* Top Header: Category & Bookmark */}
+    <div
+      onClick={() => onSelect(opportunity)}
+      className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-white/[0.08] dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/65 backdrop-blur-md p-4 sm:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-brand-500/50 cursor-pointer"
+    >
+      {/* Left accent strip */}
+      <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${style.strip}`} />
+
+      {/* Top Header: Host & Bookmark */}
       <div>
-        <div className="flex items-center justify-between gap-2 mb-2.5">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span
-              className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${getTypeColor(
-                type
-              )}`}
-            >
-              {type || 'Opportunity'}
+        <div className="flex items-center justify-between gap-2 mb-2.5 pl-1">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* Host Monogram */}
+            <div className="w-6 h-6 rounded-md bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-[10px] font-mono font-bold text-slate-300 shrink-0">
+              {(host || 'O').charAt(0).toUpperCase()}
+            </div>
+            <span className="font-mono text-xs text-slate-400 truncate max-w-[170px]">
+              {host || 'Verified Organization'}
             </span>
-            {category && (
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md truncate max-w-[140px]">
-                {category}
-              </span>
-            )}
           </div>
+
+          {/* Bookmark Button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onToggleSave(opportunity);
             }}
             title={isSaved ? 'Remove from saved' : 'Save opportunity'}
-            className={`p-1.5 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-lg border transition ${
               isSaved
-                ? 'text-brand-600 bg-brand-50 dark:text-brand-400 dark:bg-brand-950/50'
-                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'border-brand-500 bg-brand-500/20 text-brand-400'
+                : 'border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.05]'
             }`}
           >
-            {isSaved ? (
-              <BookmarkCheck className="w-4 h-4 fill-current" />
-            ) : (
-              <Bookmark className="w-4 h-4" />
-            )}
+            {isSaved ? <BookmarkCheck className="w-4 h-4 text-brand-400 fill-brand-400/30" /> : <Bookmark className="w-4 h-4" />}
           </button>
         </div>
 
-        {/* Title */}
-        <h3
-          onClick={() => onSelect(opportunity)}
-          className="text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors cursor-pointer line-clamp-2 leading-snug mb-1.5"
-        >
+        {/* Opportunity Title */}
+        <h3 className="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-brand-400 transition-colors line-clamp-2 leading-snug mb-2 pl-1">
           {title}
         </h3>
 
-        {/* Host / Organization */}
-        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 mb-3">
-          <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="truncate">{host || 'Host Organization'}</span>
+        {/* Type & Category Pills */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-3 pl-1">
+          <span className={`font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full border ${style.badge}`}>
+            {type || 'Opportunity'}
+          </span>
+          {category && (
+            <span className="text-[10px] text-slate-400 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-md truncate max-w-[160px]">
+              {category}
+            </span>
+          )}
         </div>
 
-        {/* Key Info Badges */}
-        <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 mb-4">
-          {/* Location */}
-          <div className="flex items-center gap-2">
-            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span className="truncate">{location || 'Remote / Unspecified'}</span>
-          </div>
-
-          {/* Deadline */}
-          <div className="flex items-center gap-2">
-            <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            <span className="truncate font-medium text-slate-700 dark:text-slate-300">
-              {deadline || 'Check official portal'}
+        {/* Key Metrics Strip (Stipend & Deadline) */}
+        <div className="space-y-1.5 pl-1 mb-4 text-xs font-mono">
+          {/* Stipend / Aid */}
+          <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+            <DollarSign className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate font-semibold text-[11px]">
+              {stipend || 'Check site (Stipend / Free tuition / Aid)'}
             </span>
           </div>
 
-          {/* Stipend / Funding */}
-          <div className="flex items-center gap-2">
-            <DollarSign className={`w-3.5 h-3.5 shrink-0 ${isFunded ? 'text-emerald-500' : 'text-slate-400'}`} />
-            <span
-              className={`truncate font-medium ${
-                isFunded
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-slate-500 dark:text-slate-400'
-              }`}
-            >
-              {stipend || 'Funding info on site'}
-            </span>
-          </div>
-
-          {/* Eligibility */}
-          {eligibility && eligibility !== 'Open to all eligible applicants' && (
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span className="truncate text-[11px] text-slate-500 dark:text-slate-400">
-                {eligibility}
-              </span>
+          {/* Deadline & Location row */}
+          <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+            {/* Deadline */}
+            <div className="flex items-center gap-1 text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md truncate">
+              <Calendar className="w-3 h-3 shrink-0" />
+              <span className="truncate">{deadline || 'Rolling'}</span>
             </div>
-          )}
+
+            {/* Location */}
+            <div className="flex items-center gap-1 text-slate-300 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-md truncate">
+              <MapPin className="w-3 h-3 text-rose-400 shrink-0" />
+              <span className="truncate">{location || 'Online / Global'}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Footer / Attribution & Action Buttons */}
-      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-        {/* Source Repo Attribution */}
+      {/* Footer: Source Repo & Action Link */}
+      <div className="pt-2.5 border-t border-white/[0.06] flex items-center justify-between pl-1 text-[11px] font-mono">
         <a
-          href={sourceRepo?.url || `https://github.com/${sourceRepo?.owner}/${sourceRepo?.name}`}
+          href={`https://github.com/${repoDisplayName}`}
           target="_blank"
           rel="noopener noreferrer"
-          title={`Source repository: ${sourceRepo?.name} by @${sourceRepo?.owner}`}
-          className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 transition-colors truncate max-w-[150px]"
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-1 text-slate-400 hover:text-brand-400 transition truncate max-w-[190px]"
         >
-          <GitBranch className="w-3 h-3 shrink-0" />
-          <span className="truncate">{sourceRepo?.name || 'GitHub'}</span>
+          <GitBranch className="w-3 h-3 text-brand-400 shrink-0" />
+          <span className="truncate">{repoDisplayName}</span>
         </a>
 
-        {/* Buttons */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={() => onSelect(opportunity)}
-            className="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
-          >
-            Details
-          </button>
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 dark:bg-brand-500 dark:hover:bg-brand-400 rounded-lg shadow-sm transition"
-          >
-            <span>Apply</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
+        <a
+          href={url || `https://github.com/${repoDisplayName}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-1 text-brand-400 hover:text-brand-300 font-semibold transition shrink-0"
+        >
+          <span>Apply</span>
+          <ArrowUpRight className="w-3.5 h-3.5" />
+        </a>
       </div>
     </div>
   );
