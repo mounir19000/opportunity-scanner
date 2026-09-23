@@ -82,9 +82,9 @@
       "description": "Gold standard community-driven list updated daily for upcoming summer tech internships."
     },
     {
-      "name": "Summer2026-Internships",
+      "name": "Summer2027-Internships",
       "owner": "SimplifyJobs",
-      "url": "https://github.com/SimplifyJobs/Summer2026-Internships",
+      "url": "https://github.com/SimplifyJobs/Summer2027-Internships",
       "category": "Tech & Software Engineering Internships (Main Season)",
       "focus": "Tech Internships (North America / Remote)",
       "target_audience": "College Students",
@@ -262,9 +262,9 @@
       "description": "Compilation of major research internships (Mitacs, DAAD WISE, S.N. Bose, Viterbi-India, IIT SRIP)."
     },
     {
-      "name": "ai-opportunities-in-academia",
-      "owner": "rohitgandhi",
-      "url": "https://github.com/rohitgandhi/ai-opportunities-in-academia",
+      "name": "awesome-summer-schools",
+      "owner": "prakharprasad",
+      "url": "https://github.com/prakharprasad/awesome-summer-schools",
       "category": "Academic Research Internships, REUs & Lab Opportunities",
       "focus": "Academic AI Research Positions",
       "target_audience": "Students & Pre-PhDs",
@@ -280,18 +280,18 @@
       "description": "Dedicated list of Research Experiences for Undergraduates (REU) programs and summer research fellowships."
     },
     {
-      "name": "Research-Internships-for-B-tech-students",
-      "owner": "astropashu",
-      "url": "https://github.com/astropashu/Research-Internships-for-B-tech-students",
+      "name": "Summer-Internships",
+      "owner": "saurabhkumar98",
+      "url": "https://github.com/saurabhkumar98/Summer-Internships",
       "category": "Academic Research Internships, REUs & Lab Opportunities",
       "focus": "International Research Programs",
       "target_audience": "Engineering Undergrads",
       "description": "Research programs open to undergraduate engineers (OIST, ETH Zurich, MPI, DAAD, S.N. Bose, CERN)."
     },
     {
-      "name": "A-to-Z-Resources-for-Students",
-      "owner": "ks-sharad",
-      "url": "https://github.com/ks-sharad/A-to-Z-Resources-for-Students",
+      "name": "2025-SWE-College-Jobs",
+      "owner": "SpeedyApply",
+      "url": "https://github.com/SpeedyApply/2025-SWE-College-Jobs",
       "category": "Academic Research Internships, REUs & Lab Opportunities",
       "focus": "Global Academic Internships",
       "target_audience": "STEM Students",

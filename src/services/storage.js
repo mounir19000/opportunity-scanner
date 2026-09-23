@@ -121,3 +121,4 @@ export const saveSettings = (newSettings) => {
     return getSettings();
   }
 };
+
