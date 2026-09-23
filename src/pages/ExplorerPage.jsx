@@ -38,6 +38,7 @@ export default function ExplorerPage({
   const allRepos = useMemo(() => {
     const set = new Set();
     opportunities.forEach((o) => {
+      if (o.sourceRepo) set.add(o.sourceRepo);
       const repoName = typeof o.sourceRepo === 'string' ? o.sourceRepo : (o.sourceRepo?.name || '');
       if (repoName) set.add(repoName);
     });
@@ -158,6 +159,7 @@ export default function ExplorerPage({
 
       // 7. Source Repo
       if (selectedRepo !== 'all') {
+        if (item.sourceRepo !== selectedRepo) return false;
         const repoName = typeof item.sourceRepo === 'string' ? item.sourceRepo : (item.sourceRepo?.name || '');
         if (repoName !== selectedRepo) return false;
       }

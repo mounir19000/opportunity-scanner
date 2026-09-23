@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   X,
   ExternalLink,
@@ -10,12 +10,9 @@ import {
   GraduationCap,
   Bookmark,
   BookmarkCheck,
-  CheckCircle2,
-  Clock,
   Share2,
   Check,
-  Sparkles,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function DetailModal({
   opportunity,
@@ -27,31 +24,31 @@ export default function DetailModal({
   onUpdateStatus,
 }) {
   const [copied, setCopied] = useState(false);
-  const [personalNotes, setPersonalNotes] = useState('');
-  const [appStatus, setAppStatus] = useState('saved');
+  const [personalNotes, setPersonalNotes] = useState("");
+  const [appStatus, setAppStatus] = useState("saved");
 
   useEffect(() => {
     if (savedDetails) {
-      setPersonalNotes(savedDetails.notes || '');
-      setAppStatus(savedDetails.status || 'saved');
+      setPersonalNotes(savedDetails.notes || "");
+      setAppStatus(savedDetails.status || "saved");
     } else {
-      setPersonalNotes('');
-      setAppStatus('saved');
+      setPersonalNotes("");
+      setAppStatus("saved");
     }
   }, [savedDetails, opportunity]);
 
   // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     };
     if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden';
+      window.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
     }
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'unset';
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
     };
   }, [isOpen, onClose]);
 
@@ -72,8 +69,8 @@ export default function DetailModal({
     sourceRepo,
   } = opportunity;
 
-  const repoDisplayName = typeof sourceRepo === 'string' ? sourceRepo : (sourceRepo?.name || 'GitHub');
-  const repoUrl = typeof sourceRepo === 'string' ? `https://github.com/${sourceRepo}` : (sourceRepo?.url || `https://github.com/${repoDisplayName}`);
+  const repoDisplayName = typeof sourceRepo === "string" ? sourceRepo : (sourceRepo?.name || "GitHub");
+  const repoUrl = typeof sourceRepo === "string" ? `https://github.com/${sourceRepo}` : (sourceRepo?.url || `https://github.com/${repoDisplayName}`);
 
   const handleCopyLink = () => {
     if (navigator.clipboard) {
@@ -107,7 +104,7 @@ export default function DetailModal({
         {/* Top Header Tags */}
         <div className="flex flex-wrap items-center gap-2 mb-3 pr-10">
           <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
-            {type || 'Opportunity'}
+            {type || "Opportunity"}
           </span>
           {category && (
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/[0.06]">
@@ -145,7 +142,7 @@ export default function DetailModal({
                 Application Deadline
               </div>
               <div className="text-sm font-semibold text-amber-300 mt-0.5">
-                {deadline || 'Check official site / Rolling'}
+                {deadline || "Check official site / Rolling"}
               </div>
               {dates && (
                 <div className="text-[11px] text-slate-400 mt-1 font-sans">
@@ -165,7 +162,7 @@ export default function DetailModal({
                 Compensation / Funding
               </div>
               <div className="text-sm font-semibold text-emerald-300 mt-0.5">
-                {stipend || 'Check official site (Stipend / Free tuition / Aid)'}
+                {stipend || "Check official site (Stipend / Free tuition / Aid)"}
               </div>
             </div>
           </div>
@@ -185,7 +182,7 @@ export default function DetailModal({
             </div>
           )}
 
-          {notes && notes !== 'N/A' && (
+          {notes && notes !== "N/A" && (
             <div>
               <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                 Additional Information
@@ -258,8 +255,8 @@ export default function DetailModal({
               onClick={() => onToggleSave(opportunity, appStatus, personalNotes)}
               className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border font-mono text-xs font-semibold transition ${
                 isSaved
-                  ? 'border-brand-500 bg-brand-500/20 text-brand-300'
-                  : 'border-white/[0.08] hover:bg-slate-800 text-slate-300 hover:text-white'
+                  ? "border-brand-500 bg-brand-500/20 text-brand-300"
+                  : "border-white/[0.08] hover:bg-slate-800 text-slate-300 hover:text-white"
               }`}
             >
               {isSaved ? (

@@ -66,7 +66,7 @@ export function inferType(title = '', category = '') {
   return 'Opportunity';
 }
 
-// 1. Markdown Table Parser (Handles standard and non-standard markdown tables)
+// 1. Markdown Table Parser
 export function parseMarkdownTable(markdownText, repoInfo) {
   const lines = markdownText.split('\n');
   const opportunities = [];
@@ -78,7 +78,6 @@ export function parseMarkdownTable(markdownText, repoInfo) {
     const rawLine = lines[i].trim();
     if (!rawLine.includes('|')) {
       if (inTable && rawLine.length === 0) {
-        // empty line, might be gap between tables, do not reset immediately
         continue;
       }
       inTable = false;
@@ -86,20 +85,17 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       continue;
     }
 
-    // Split by pipe and remove leading/trailing empties
     const rawCells = rawLine.split('|').map((c) => c.trim());
     if (rawCells.length > 0 && rawCells[0] === '') rawCells.shift();
     if (rawCells.length > 0 && rawCells[rawCells.length - 1] === '') rawCells.pop();
 
     if (rawCells.length < 2) continue;
 
-    // Check if line is a table divider line (---|---|---)
     if (rawCells.every((c) => /^[ \t\-:]+$/.test(c))) {
       inTable = true;
       continue;
     }
 
-    // Check if line is a header row
     const isHeader = rawCells.some((c) => {
       const lower = c.toLowerCase();
       return (
@@ -170,7 +166,6 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         continue;
       }
 
-      // Handle sub-roles like "↳" inheriting parent company
       let host = parsedHost.text || cleanText(hostCell);
       if (!host || host === '↳' || host === '->') {
         host = lastHost;
@@ -210,7 +205,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
   return opportunities;
 }
 
-// 2. HTML Table Parser (For repos like SimplifyJobs that use <table><tr><td>)
+// 2. HTML Table Parser
 export function parseHtmlTable(htmlText, repoInfo) {
   const opportunities = [];
   const trMatches = htmlText.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
@@ -220,7 +215,6 @@ export function parseHtmlTable(htmlText, repoInfo) {
 
   for (let i = 0; i < trMatches.length; i++) {
     const tr = trMatches[i];
-    // Skip table header
     if (tr.includes('<th')) continue;
 
     const tdMatches = tr.match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
@@ -267,7 +261,7 @@ export function parseHtmlTable(htmlText, repoInfo) {
   return opportunities;
 }
 
-// 3. Bullet List Parser (For repos formatted as bullet lists with markdown links)
+// 3. Bullet List Parser
 export function parseMarkdownBullets(markdownText, repoInfo) {
   const lines = markdownText.split('\n');
   const opportunities = [];
@@ -279,7 +273,6 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
     const parsed = parseMarkdownLink(line);
     if (!parsed.url || !parsed.text || parsed.text.length < 3) continue;
 
-    // Check if the link looks like a project or organization
     if (parsed.text.toLowerCase().includes('table of contents') || parsed.text.toLowerCase().includes('back to top')) {
       continue;
     }
@@ -326,7 +319,6 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
   let lastError = null;
   let statusCode = 404;
 
-  // Try permutations of branches and filenames
   for (const branch of branches) {
     for (const filename of filenames) {
       const rawUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${filename}`;
@@ -372,7 +364,6 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     return { opportunities: [], log: logEntry };
   }
 
-  // Parse using Markdown tables, HTML tables, and bullet lists
   let opportunities = parseMarkdownTable(content, repo);
   if (opportunities.length === 0) {
     opportunities = parseHtmlTable(content, repo);

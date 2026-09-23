@@ -1,5 +1,5 @@
-import React from 'react';
-import { ExternalLink, Bookmark, BookmarkCheck, ArrowUpDown, ArrowUpRight } from 'lucide-react';
+import React from "react";
+import { Bookmark, BookmarkCheck, ArrowUpDown, ArrowUpRight } from "lucide-react";
 
 export default function OpportunityTable({
   opportunities,
@@ -16,7 +16,7 @@ export default function OpportunityTable({
           <tr>
             <th className="py-3 px-3 w-10 text-center">Save</th>
             <th
-              onClick={() => onSort('title')}
+              onClick={() => onSort("title")}
               className="py-3 px-4 cursor-pointer hover:text-brand-400 transition select-none"
             >
               <div className="flex items-center gap-1.5">
@@ -25,7 +25,7 @@ export default function OpportunityTable({
               </div>
             </th>
             <th
-              onClick={() => onSort('type')}
+              onClick={() => onSort("type")}
               className="py-3 px-3 cursor-pointer hover:text-brand-400 transition select-none"
             >
               <div className="flex items-center gap-1.5">
@@ -35,7 +35,7 @@ export default function OpportunityTable({
             </th>
             <th className="py-3 px-3">Location</th>
             <th
-              onClick={() => onSort('deadline')}
+              onClick={() => onSort("deadline")}
               className="py-3 px-3 cursor-pointer hover:text-brand-400 transition select-none"
             >
               <div className="flex items-center gap-1.5">
@@ -51,7 +51,7 @@ export default function OpportunityTable({
         <tbody className="divide-y divide-white/[0.04]">
           {opportunities.map((item) => {
             const isSaved = savedIds.has(item.id);
-            const repoDisplayName = typeof item.sourceRepo === 'string' ? item.sourceRepo : (item.sourceRepo?.name || 'GitHub');
+            const repoDisplayName = typeof item.sourceRepo === "string" ? item.sourceRepo : (item.sourceRepo?.name || "GitHub");
 
             return (
               <tr
@@ -59,7 +59,6 @@ export default function OpportunityTable({
                 onClick={() => onSelect(item)}
                 className="hover:bg-slate-800/40 transition-colors cursor-pointer group"
               >
-                {/* Save button */}
                 <td
                   className="py-3 px-3 text-center"
                   onClick={(e) => {
@@ -70,15 +69,14 @@ export default function OpportunityTable({
                   <button
                     className={`p-1.5 rounded-lg border transition ${
                       isSaved
-                        ? 'border-brand-500 bg-brand-500/20 text-brand-400'
-                        : 'border-transparent text-slate-500 hover:text-white hover:bg-slate-800'
+                        ? "border-brand-500 bg-brand-500/20 text-brand-400"
+                        : "border-transparent text-slate-500 hover:text-white hover:bg-slate-800"
                     }`}
                   >
                     {isSaved ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
                   </button>
                 </td>
 
-                {/* Title & Host */}
                 <td className="py-3 px-4">
                   <div className="font-display font-semibold text-slate-100 group-hover:text-brand-400 transition line-clamp-1">
                     {item.title}
@@ -90,31 +88,26 @@ export default function OpportunityTable({
                   )}
                 </td>
 
-                {/* Type */}
                 <td className="py-3 px-3 whitespace-nowrap">
                   <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/[0.06]">
-                    {item.type || 'Program'}
+                    {item.type || "Program"}
                   </span>
                 </td>
 
-                {/* Location */}
                 <td className="py-3 px-3 text-slate-300 font-mono text-[11px] whitespace-nowrap max-w-[130px] truncate">
-                  {item.location || 'Online'}
+                  {item.location || "Online"}
                 </td>
 
-                {/* Deadline */}
                 <td className="py-3 px-3 whitespace-nowrap">
                   <span className="font-mono text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                    {item.deadline || 'Rolling'}
+                    {item.deadline || "Rolling"}
                   </span>
                 </td>
 
-                {/* Stipend */}
                 <td className="py-3 px-3 font-mono text-[11px] text-emerald-400 max-w-[160px] truncate">
-                  {item.stipend || 'Check site'}
+                  {item.stipend || "Check site"}
                 </td>
 
-                {/* Source Repo */}
                 <td className="py-3 px-3 font-mono text-[11px] text-slate-400 max-w-[150px] truncate">
                   <a
                     href={`https://github.com/${repoDisplayName}`}
@@ -127,7 +120,6 @@ export default function OpportunityTable({
                   </a>
                 </td>
 
-                {/* Action Link */}
                 <td className="py-3 px-4 text-right whitespace-nowrap">
                   <a
                     href={item.url || `https://github.com/${repoDisplayName}`}
