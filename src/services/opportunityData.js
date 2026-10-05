@@ -54,9 +54,14 @@ export function fundingKind(value) {
 
 export function normalizeOpportunity(item) {
   const repo = sourceKey(item.sourceRepo);
+  // The school organizer's page is reachable; the list's subdomain has a broken TLS chain.
+  const url = /^https?:\/\/(?:www\.)?anais\.naamii\.org\.np\//i.test(item.url || '')
+    ? 'https://www.naamii.org/anais'
+    : item.url;
   return {
     ...item,
     sourceRepo: repo,
+    url,
     deadline: cleanUnknown(item.deadline),
     location: cleanUnknown(item.location),
     stipend: explicitDate(item.stipend) || /^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2}$/i.test(String(item.stipend || '').trim()) ? '' : cleanUnknown(item.stipend),
@@ -69,7 +74,7 @@ export function isUsefulOpportunity(item, today = new Date()) {
   const repo = sourceKey(item.sourceRepo);
   const title = String(item.title || '').trim();
   if (title.length < 8 || !usableUrl(item.url, repo)) return false;
-  if (repo === 'suco-gt/HPC-Internships' && !/\b(intern|co-op|fellowship|summer|suli|program)\b/i.test(title)) return false;
+  if (repo === 'hazratali/awesome-ai-summerschool' && !/\b20\d{2}\b/.test(item.dates || '')) return false;
   if (/\b(?:application closed|applications closed|expired|no longer accepting)\b/i.test([item.title, item.notes, item.deadline].join(' '))) return false;
   if (/^(about|resources?|internships?|research|scholarships?|apply|home|overview|contents|table of contents|back to top|all year|student opportunities)$/i.test(title)) return false;
   if (/(?:20(?:0\d|1\d|2[0-5]))/.test(title) || /(?:20(?:0\d|1\d|2[0-5]))/.test(item.dates || '')) return false;

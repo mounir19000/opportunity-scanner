@@ -2,6 +2,7 @@
   {
     "owner": "SimplifyJobs",
     "name": "Summer2027-Internships",
+    "branch": "dev",
     "category": "Internships",
     "description": "Maintained 2027 internship board with employer application links.",
     "focus": "Software, data, product and hardware",
@@ -10,6 +11,7 @@
   {
     "owner": "speedyapply",
     "name": "2027-SWE-College-Jobs",
+    "branch": "main",
     "category": "Internships",
     "description": "Current 2027 software internship and early career postings.",
     "focus": "Software engineering",
@@ -18,33 +20,19 @@
   {
     "owner": "hazratali",
     "name": "awesome-ai-summerschool",
+    "branch": "main",
     "category": "Summer schools",
     "description": "AI and machine learning schools with individual program links.",
     "focus": "AI and machine learning",
     "url": "https://github.com/hazratali/awesome-ai-summerschool"
   },
   {
-    "owner": "karanwxliaa",
-    "name": "Research-for-UG-Students",
-    "category": "Research",
-    "description": "Undergraduate research programs with program destinations.",
-    "focus": "Undergraduate research",
-    "url": "https://github.com/karanwxliaa/Research-for-UG-Students"
-  },
-  {
     "owner": "zapplyjobs",
     "name": "Research-Internships-for-Undergraduates",
+    "branch": "main",
     "category": "Research",
     "description": "Undergraduate research internship program directory.",
     "focus": "Undergraduate research",
     "url": "https://github.com/zapplyjobs/Research-Internships-for-Undergraduates"
-  },
-  {
-    "owner": "suco-gt",
-    "name": "HPC-Internships",
-    "category": "Research",
-    "description": "High performance computing internship and fellowship programs.",
-    "focus": "Computing research",
-    "url": "https://github.com/suco-gt/HPC-Internships"
   }
 ]

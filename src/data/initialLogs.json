@@ -1,6 +1,6 @@
 [
   {
-    "id": "log_1791190483914_fh7ae",
+    "id": "log_1791192461042_bwvfq",
     "repo": "SimplifyJobs/Summer2027-Internships",
     "repoName": "Summer2027-Internships",
     "repoOwner": "SimplifyJobs",
@@ -8,15 +8,15 @@
     "status": "success",
     "statusCode": 200,
     "httpStatus": 200,
-    "durationMs": 5644,
-    "itemsCount": 1819,
-    "parsedCount": 1819,
+    "durationMs": 280,
+    "itemsCount": 1818,
+    "parsedCount": 1818,
     "error": null,
-    "message": "Parsed 1819 opportunities from master/README.md",
-    "timestamp": "2026-10-05T08:54:43.914Z"
+    "message": "Parsed 1818 opportunities from dev/README.md",
+    "timestamp": "2026-10-05T09:27:41.042Z"
   },
   {
-    "id": "log_1791190484326_yv5e2",
+    "id": "log_1791192461127_6jdzy",
     "repo": "speedyapply/2027-SWE-College-Jobs",
     "repoName": "2027-SWE-College-Jobs",
     "repoOwner": "speedyapply",
@@ -24,15 +24,15 @@
     "status": "success",
     "statusCode": 200,
     "httpStatus": 200,
-    "durationMs": 376,
-    "itemsCount": 219,
-    "parsedCount": 219,
+    "durationMs": 45,
+    "itemsCount": 761,
+    "parsedCount": 761,
     "error": null,
-    "message": "Parsed 219 opportunities from main/README.md",
-    "timestamp": "2026-10-05T08:54:44.326Z"
+    "message": "Parsed 761 opportunities from main/README.md",
+    "timestamp": "2026-10-05T09:27:41.127Z"
   },
   {
-    "id": "log_1791190484421_l8y9y",
+    "id": "log_1791192461192_yq9so",
     "repo": "hazratali/awesome-ai-summerschool",
     "repoName": "awesome-ai-summerschool",
     "repoOwner": "hazratali",
@@ -40,31 +40,15 @@
     "status": "success",
     "statusCode": 200,
     "httpStatus": 200,
-    "durationMs": 74,
-    "itemsCount": 4,
-    "parsedCount": 4,
+    "durationMs": 45,
+    "itemsCount": 3,
+    "parsedCount": 3,
     "error": null,
-    "message": "Parsed 4 opportunities from main/README.md",
-    "timestamp": "2026-10-05T08:54:44.421Z"
+    "message": "Parsed 3 opportunities from main/README.md",
+    "timestamp": "2026-10-05T09:27:41.192Z"
   },
   {
-    "id": "log_1791190484476_6jase",
-    "repo": "karanwxliaa/Research-for-UG-Students",
-    "repoName": "Research-for-UG-Students",
-    "repoOwner": "karanwxliaa",
-    "url": "https://github.com/karanwxliaa/Research-for-UG-Students",
-    "status": "success",
-    "statusCode": 200,
-    "httpStatus": 200,
-    "durationMs": 50,
-    "itemsCount": 121,
-    "parsedCount": 121,
-    "error": null,
-    "message": "Parsed 121 opportunities from main/README.md",
-    "timestamp": "2026-10-05T08:54:44.476Z"
-  },
-  {
-    "id": "log_1791190484522_obaj2",
+    "id": "log_1791192461235_r3a6m",
     "repo": "zapplyjobs/Research-Internships-for-Undergraduates",
     "repoName": "Research-Internships-for-Undergraduates",
     "repoOwner": "zapplyjobs",
@@ -72,27 +56,11 @@
     "status": "success",
     "statusCode": 200,
     "httpStatus": 200,
-    "durationMs": 43,
+    "durationMs": 39,
     "itemsCount": 75,
     "parsedCount": 75,
     "error": null,
     "message": "Parsed 75 opportunities from main/README.md",
-    "timestamp": "2026-10-05T08:54:44.522Z"
-  },
-  {
-    "id": "log_1791190484577_z3zea",
-    "repo": "suco-gt/HPC-Internships",
-    "repoName": "HPC-Internships",
-    "repoOwner": "suco-gt",
-    "url": "https://github.com/suco-gt/HPC-Internships",
-    "status": "success",
-    "statusCode": 200,
-    "httpStatus": 200,
-    "durationMs": 51,
-    "itemsCount": 12,
-    "parsedCount": 12,
-    "error": null,
-    "message": "Parsed 12 opportunities from main/README.md",
-    "timestamp": "2026-10-05T08:54:44.577Z"
+    "timestamp": "2026-10-05T09:27:41.235Z"
   }
 ]

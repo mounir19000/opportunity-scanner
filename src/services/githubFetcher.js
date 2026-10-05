@@ -99,15 +99,15 @@ export function parseMarkdownTable(markdownText, repoInfo) {
     }
 
     const headerLabels = rawCells.map((cell) => cleanText(cell).toLowerCase().replace(/[^a-z0-9 ]/g, '').trim());
-    const knownHeaders = /^(name|company|program|role|title|venue|location|city|country|deadline|due|apply by|closes|organizers?|hosts?|university|institute|fee|scholarship|stipend|salary|aid|funding|date|timeline|duration|period|eligibility|level|target|audience|apply|link|url)$/;
+    const knownHeaders = /^(name|company|program|role|position|title|venue|location|city|country|deadline|due|apply by|closes|organizers?|hosts?|university|institute|fee|scholarship|stipend|salary|aid|funding|date|timeline|duration|period|eligibility|level|target|audience|apply|posting|link|url)$/;
     const isHeader = headerLabels.filter((label) => knownHeaders.test(label)).length >= 2
-      && headerLabels.some((label) => /^(name|company|program|role|title)$/.test(label));
+      && headerLabels.some((label) => /^(name|company|program|role|position|title)$/.test(label));
 
     if (isHeader) {
       headerIndexMap = {};
       rawCells.forEach((c, idx) => {
         const lower = headerLabels[idx];
-        if (lower.includes('name') || lower.includes('program') || lower.includes('title') || lower.includes('role')) {
+        if (lower.includes('name') || lower.includes('program') || lower.includes('title') || lower.includes('role') || lower.includes('position')) {
           if (headerIndexMap.title === undefined) headerIndexMap.title = idx;
         }
         if (lower.includes('company') || lower.includes('organizer') || lower.includes('host') || lower.includes('university') || lower.includes('institute')) {
@@ -129,7 +129,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         if (lower.includes('eligibility') || lower.includes('level') || lower.includes('target') || lower.includes('audience')) {
           headerIndexMap.eligibility = idx;
         }
-        if (lower.includes('apply') || lower.includes('link') || lower.includes('url')) {
+        if (lower.includes('apply') || lower.includes('posting') || lower.includes('link') || lower.includes('url')) {
           headerIndexMap.url = idx;
         }
       });
@@ -164,7 +164,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         lastHost = host;
       }
 
-      const applyUrl = parsedTitle.url || parsedUrl.url || (urlCell.startsWith('http') ? urlCell : '');
+      const applyUrl = parsedUrl.url || (urlCell.startsWith('http') ? urlCell : '') || parsedTitle.url;
       const location = cleanText(locCell);
       const deadline = cleanText(deadlineCell);
       const dates = cleanText(datesCell);
@@ -292,12 +292,33 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
   return opportunities;
 }
 
+async function fetchReadme(url, headers) {
+  let lastError;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+        ? AbortSignal.timeout(10000)
+        : undefined;
+      const response = await fetch(url, { headers, signal });
+      if ((response.status === 429 || response.status >= 500) && attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        continue;
+      }
+      return response;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  }
+  throw lastError || new Error('README request failed');
+}
+
 // 4. Master Fetch Function for a Repository
 export async function fetchRepositoryOpportunities(repo, token = '') {
   const startTime = Date.now();
   const repoName = repo.name;
   const repoOwner = repo.owner;
-  const branches = ['main', 'master', 'dev'];
+  const branches = repo.branch ? [repo.branch] : ['main', 'master', 'dev'];
   const filenames = ['README.md', 'Readme.md', 'readme.md'];
 
   const headers = {};
@@ -314,7 +335,7 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     for (const filename of filenames) {
       const rawUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${filename}`;
       try {
-        const res = await fetch(rawUrl, { headers });
+        const res = await fetchReadme(rawUrl, headers);
         if (res.ok) {
           content = await res.text();
           successfulUrl = rawUrl;
@@ -348,8 +369,8 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
       durationMs,
       itemsCount: 0,
       parsedCount: 0,
-      error: lastError || 'README not found on main/master/dev branches',
-      message: lastError || 'README not found on main/master/dev branches',
+      error: lastError || 'README not found on configured branches',
+      message: lastError || 'README not found on configured branches',
       timestamp: new Date().toISOString(),
     };
     return { opportunities: [], log: logEntry };

@@ -19,3 +19,18 @@ test('table parser keeps its header when a program title contains header words',
   assert.equal(parsed[1].deadline, '30 January 2027');
   assert.equal(parsed[1].stipend, 'Free');
 });
+
+test('position and posting columns use the job URL, not the company homepage', () => {
+  const markdown = [
+    '| Company | Position | Location | Salary | Posting | Age |',
+    '| --- | --- | --- | --- | --- | --- |',
+    '| <a href="https://www.pinterest.com"><strong>Pinterest</strong></a> | Software Engineer Intern 2027 - USA | Remote - San Francisco, CA | $52/hr | <a href="https://www.pinterestcareers.com/jobs/?gh_jid=7838577"><img src="https://i.imgur.com/apply.png" alt="Apply"/></a> | 2d |',
+  ].join('\n');
+  const repo = { owner: 'speedyapply', name: '2027-SWE-College-Jobs', category: 'Internships' };
+  const parsed = parseMarkdownTable(markdown, repo);
+  assert.equal(parsed.length, 1);
+  assert.equal(parsed[0].title, 'Software Engineer Intern 2027 - USA');
+  assert.equal(parsed[0].host, 'Pinterest');
+  assert.equal(parsed[0].url, 'https://www.pinterestcareers.com/jobs/?gh_jid=7838577');
+  assert.equal(parsed[0].stipend, '$52/hr');
+});
