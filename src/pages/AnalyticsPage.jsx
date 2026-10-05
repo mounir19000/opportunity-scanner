@@ -63,11 +63,11 @@ export default function AnalyticsPage({
     });
 
     return [
-      { name: '🌐 Remote / Virtual', count: remote, color: 'bg-indigo-500' },
+      { name: 'Remote / Virtual', count: remote, color: 'bg-indigo-500' },
       { name: '🇺🇸 United States', count: us, color: 'bg-blue-500' },
       { name: '🇪🇺 Europe', count: europe, color: 'bg-emerald-500' },
-      { name: '🌏 Asia & Pacific', count: asia, color: 'bg-amber-500' },
-      { name: '🌍 Global / Worldwide', count: other, color: 'bg-slate-500' },
+      { name: 'Asia & Pacific', count: asia, color: 'bg-amber-500' },
+      { name: 'Global / Worldwide', count: other, color: 'bg-slate-500' },
     ];
   }, [opportunities]);
 
@@ -86,9 +86,7 @@ export default function AnalyticsPage({
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-            <BarChart3 className="w-5 h-5" />
-          </div>
+          <BarChart3 className="w-6 h-6 text-indigo-500" />
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             Ecosystem Analytics & Visual Trends
           </h1>
@@ -101,7 +99,7 @@ export default function AnalyticsPage({
       {/* Top 3 Visual Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Card 1: Opportunities by Type */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 ">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <GraduationCap className="w-4 h-4 text-brand-500" />
@@ -134,7 +132,7 @@ export default function AnalyticsPage({
         </div>
 
         {/* Card 2: Location Distribution */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 ">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Globe className="w-4 h-4 text-cyan-500" />
@@ -167,7 +165,7 @@ export default function AnalyticsPage({
         </div>
 
         {/* Card 3: Top Opportunity Categories */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 ">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Award className="w-4 h-4 text-amber-500" />
@@ -202,7 +200,7 @@ export default function AnalyticsPage({
       </div>
 
       {/* Upcoming Active Timeline Section */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 ">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">

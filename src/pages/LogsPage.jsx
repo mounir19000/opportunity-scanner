@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import {
   Terminal,
   AlertTriangle,
@@ -11,7 +11,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Key,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function LogsPage({
   logs = [],
@@ -21,47 +21,68 @@ export default function LogsPage({
   onSyncAll,
   isSyncing,
 }) {
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showTokenSettings, setShowTokenSettings] = useState(false);
   const [githubToken, setGithubToken] = useState(() => {
-    return localStorage.getItem('opportunity_scout_github_token') || '';
+    return localStorage.getItem("opportunity_scout_github_token") || "";
   });
   const [tokenSaved, setTokenSaved] = useState(false);
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
-      if (filterStatus === 'error' && log.status !== 'error') return false;
-      if (filterStatus === 'success' && log.status !== 'success') return false;
-      if (filterStatus === 'warning' && log.status !== 'warning') return false;
+      if (filterStatus === "error" && log.status !== "error") return false;
+      if (filterStatus === "success" && log.status !== "success") return false;
+      if (filterStatus === "warning" && log.status !== "warning") return false;
 
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
-        const repoStr = (log.repo || (log.repoOwner ? `${log.repoOwner}/${log.repoName}` : log.repoName) || '').toLowerCase();
-        const msgStr = (log.message || log.error || '').toLowerCase();
-        const urlStr = (log.url || '').toLowerCase();
-        if (!repoStr.includes(query) && !msgStr.includes(query) && !urlStr.includes(query)) return false;
+        const repoStr = (
+          log.repo ||
+          (log.repoOwner ? `${log.repoOwner}/${log.repoName}` : log.repoName) ||
+          ""
+        ).toLowerCase();
+        const msgStr = (log.message || log.error || "").toLowerCase();
+        const urlStr = (log.url || "").toLowerCase();
+        if (
+          !repoStr.includes(query) &&
+          !msgStr.includes(query) &&
+          !urlStr.includes(query)
+        )
+          return false;
       }
       return true;
     });
   }, [logs, filterStatus, searchTerm]);
 
   const totalLogs = logs.length;
-  const errorCount = logs.filter((l) => l.status === 'error').length;
-  const successCount = logs.filter((l) => l.status === 'success').length;
-  const parsedCount = logs.reduce((acc, curr) => acc + (curr.parsedCount !== undefined ? curr.parsedCount : (curr.itemsCount || 0)), 0);
+  const errorCount = logs.filter((l) => l.status === "error").length;
+  const successCount = logs.filter((l) => l.status === "success").length;
+  const parsedCount = logs.reduce(
+    (acc, curr) =>
+      acc +
+      (curr.parsedCount !== undefined
+        ? curr.parsedCount
+        : curr.itemsCount || 0),
+    0,
+  );
 
   const handleSaveToken = () => {
-    localStorage.setItem('opportunity_scout_github_token', githubToken.trim());
+    localStorage.setItem("opportunity_scout_github_token", githubToken.trim());
     setTokenSaved(true);
     setTimeout(() => setTokenSaved(false), 2000);
   };
 
   const handleExportLogs = () => {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(logs, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `opportunity_radar_logs_${new Date().toISOString().slice(0, 10)}.json`);
+    const dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(logs, null, 2));
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute(
+      "download",
+      `opportunity_radar_logs_${new Date().toISOString().slice(0, 10)}.json`,
+    );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -81,7 +102,8 @@ export default function LogsPage({
             </h1>
           </div>
           <p className="text-xs text-slate-400">
-            Real-time telemetry tracking for all 99+ repository sources, HTTP response codes, extracted opportunities, and failure recovery.
+            Real-time telemetry tracking for all 99+ repository sources, HTTP
+            response codes, extracted opportunities, and failure recovery.
           </p>
         </div>
 
@@ -90,10 +112,12 @@ export default function LogsPage({
           <button
             onClick={onSyncAll}
             disabled={isSyncing}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-500/20 transition disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold bg-brand-600 hover:bg-brand-500 text-white   transition disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Syncing...' : 'Sync All Sources'}</span>
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`}
+            />
+            <span>{isSyncing ? "Syncing..." : "Sync All Sources"}</span>
           </button>
 
           {errorCount > 0 && (
@@ -111,8 +135,8 @@ export default function LogsPage({
             onClick={() => setShowTokenSettings(!showTokenSettings)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono transition border ${
               showTokenSettings
-                ? 'bg-brand-500/10 border-brand-500/30 text-brand-400'
-                : 'bg-slate-900/60 hover:bg-slate-800 border-white/[0.08] text-slate-300'
+                ? "bg-brand-500/10 border-brand-500/30 text-brand-400"
+                : "bg-slate-900 hover:bg-slate-800 border-white/[0.08] text-slate-300"
             }`}
           >
             <Key className="w-3.5 h-3.5 text-amber-400" />
@@ -122,7 +146,7 @@ export default function LogsPage({
           <button
             onClick={handleExportLogs}
             disabled={logs.length === 0}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono bg-slate-900/60 hover:bg-slate-800 border border-white/[0.08] text-slate-300 transition disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono bg-slate-900 hover:bg-slate-800 border border-white/[0.08] text-slate-300 transition disabled:opacity-40"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export</span>
@@ -131,7 +155,7 @@ export default function LogsPage({
           <button
             onClick={onClearLogs}
             disabled={logs.length === 0}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono bg-slate-900/60 hover:bg-rose-500/10 hover:text-rose-400 border border-white/[0.08] text-slate-400 transition disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono bg-slate-900 hover:bg-rose-500/10 hover:text-rose-400 border border-white/[0.08] text-slate-400 transition disabled:opacity-40"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Clear</span>
@@ -141,18 +165,22 @@ export default function LogsPage({
 
       {/* GitHub Token Settings Banner */}
       {showTokenSettings && (
-        <div className="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/30 backdrop-blur-md space-y-3">
+        <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/30  space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <h3 className="text-sm font-semibold text-white">GitHub API Rate Limit Elevation</h3>
+              <h3 className="text-sm font-semibold text-white">
+                GitHub API Rate Limit Elevation
+              </h3>
             </div>
             <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">
               Optional
             </span>
           </div>
           <p className="text-xs text-slate-400">
-            Unauthenticated GitHub requests are capped at 60 requests/hour. Entering a personal access token (with zero permissions needed, public read-only) elevates your limit to 5,000 requests/hour.
+            Unauthenticated GitHub requests are capped at 60 requests/hour.
+            Entering a personal access token (with zero permissions needed,
+            public read-only) elevates your limit to 5,000 requests/hour.
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <input
@@ -166,7 +194,7 @@ export default function LogsPage({
               onClick={handleSaveToken}
               className="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white transition shrink-0"
             >
-              {tokenSaved ? 'Saved to Browser!' : 'Save Token'}
+              {tokenSaved ? "Saved to Browser!" : "Save Token"}
             </button>
           </div>
         </div>
@@ -174,72 +202,90 @@ export default function LogsPage({
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-md">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Total Tracked Repos</span>
+        <div className="p-4 rounded-2xl bg-slate-900 border border-white/[0.08] ">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+            Total Tracked Repos
+          </span>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-display text-2xl font-bold text-white font-mono">{totalLogs}</span>
+            <span className="font-display text-2xl font-bold text-white font-mono">
+              {totalLogs}
+            </span>
             <span className="text-[11px] text-slate-500">configured</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-md">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Healthy & Synchronized</span>
+        <div className="p-4 rounded-2xl bg-slate-900 border border-white/[0.08] ">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400">
+            Healthy & Synchronized
+          </span>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-display text-2xl font-bold text-emerald-400 font-mono">{successCount}</span>
+            <span className="font-display text-2xl font-bold text-emerald-400 font-mono">
+              {successCount}
+            </span>
             <span className="text-[11px] text-emerald-500/70 font-mono">
-              {totalLogs > 0 ? `${Math.round((successCount / totalLogs) * 100)}%` : '0%'}
+              {totalLogs > 0
+                ? `${Math.round((successCount / totalLogs) * 100)}%`
+                : "0%"}
             </span>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-md">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-rose-400">Failed / Rate Limited</span>
+        <div className="p-4 rounded-2xl bg-slate-900 border border-white/[0.08] ">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-rose-400">
+            Failed / Rate Limited
+          </span>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-display text-2xl font-bold text-rose-400 font-mono">{errorCount}</span>
+            <span className="font-display text-2xl font-bold text-rose-400 font-mono">
+              {errorCount}
+            </span>
             <span className="text-[11px] text-rose-500/70 font-mono">
-              {errorCount === 0 ? 'All 100% OK' : 'Issues logged'}
+              {errorCount === 0 ? "All 100% OK" : "Issues logged"}
             </span>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-md">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-brand-400">Opportunities Ingested</span>
+        <div className="p-4 rounded-2xl bg-slate-900 border border-white/[0.08] ">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-brand-400">
+            Opportunities Ingested
+          </span>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-display text-2xl font-bold text-brand-400 font-mono">{parsedCount.toLocaleString()}</span>
+            <span className="font-display text-2xl font-bold text-brand-400 font-mono">
+              {parsedCount.toLocaleString()}
+            </span>
             <span className="text-[11px] text-brand-400/70">items parsed</span>
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900 border border-white/[0.08] ">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           <button
-            onClick={() => setFilterStatus('all')}
+            onClick={() => setFilterStatus("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition ${
-              filterStatus === 'all'
-                ? 'bg-white/10 text-white font-semibold'
-                : 'text-slate-400 hover:text-slate-200'
+              filterStatus === "all"
+                ? "bg-white/10 text-white font-semibold"
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
             All ({totalLogs})
           </button>
           <button
-            onClick={() => setFilterStatus('error')}
+            onClick={() => setFilterStatus("error")}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition ${
-              filterStatus === 'error'
-                ? 'bg-rose-500/20 text-rose-400 font-semibold border border-rose-500/30'
-                : 'text-slate-400 hover:text-rose-400'
+              filterStatus === "error"
+                ? "bg-rose-500/20 text-rose-400 font-semibold border border-rose-500/30"
+                : "text-slate-400 hover:text-rose-400"
             }`}
           >
             Errors ({errorCount})
           </button>
           <button
-            onClick={() => setFilterStatus('success')}
+            onClick={() => setFilterStatus("success")}
             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition ${
-              filterStatus === 'success'
-                ? 'bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30'
-                : 'text-slate-400 hover:text-emerald-400'
+              filterStatus === "success"
+                ? "bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30"
+                : "text-slate-400 hover:text-emerald-400"
             }`}
           >
             Healthy ({successCount})
@@ -259,7 +305,7 @@ export default function LogsPage({
       </div>
 
       {/* Logs Table */}
-      <div className="overflow-hidden rounded-2xl bg-slate-900/60 border border-white/[0.08] backdrop-blur-md shadow-xl">
+      <div className="overflow-hidden rounded-2xl bg-slate-900 border border-white/[0.08]  ">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -275,16 +321,27 @@ export default function LogsPage({
             <tbody className="divide-y divide-white/[0.04]">
               {filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500 font-mono text-xs">
+                  <td
+                    colSpan={6}
+                    className="py-12 text-center text-slate-500 font-mono text-xs"
+                  >
                     No logs matching selected filters
                   </td>
                 </tr>
               ) : (
                 filteredLogs.map((log, idx) => {
-                  const repoDisplayName = log.repo || (log.repoOwner ? `${log.repoOwner}/${log.repoName}` : log.repoName) || 'Unknown Source';
-                  const isErr = log.status === 'error';
-                  const isWarn = log.status === 'warning';
-                  const itemsExtracted = log.parsedCount !== undefined ? log.parsedCount : (log.itemsCount || 0);
+                  const repoDisplayName =
+                    log.repo ||
+                    (log.repoOwner
+                      ? `${log.repoOwner}/${log.repoName}`
+                      : log.repoName) ||
+                    "Unknown Source";
+                  const isErr = log.status === "error";
+                  const isWarn = log.status === "warning";
+                  const itemsExtracted =
+                    log.parsedCount !== undefined
+                      ? log.parsedCount
+                      : log.itemsCount || 0;
 
                   return (
                     <tr
@@ -316,7 +373,9 @@ export default function LogsPage({
                             {repoDisplayName}
                           </span>
                           <a
-                            href={log.url || `https://github.com/${repoDisplayName}`}
+                            href={
+                              log.url || `https://github.com/${repoDisplayName}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-slate-500 hover:text-slate-300 transition"
@@ -338,13 +397,19 @@ export default function LogsPage({
                       </td>
 
                       <td className="py-3 px-4 max-w-md">
-                        <p className={`text-xs truncate ${isErr ? 'text-rose-300 font-mono text-[11px]' : 'text-slate-400'}`}>
-                          {log.message || log.error || 'Sync completed successfully'}
+                        <p
+                          className={`text-xs truncate ${isErr ? "text-rose-300 font-mono text-[11px]" : "text-slate-400"}`}
+                        >
+                          {log.message ||
+                            log.error ||
+                            "Sync completed successfully"}
                         </p>
                       </td>
 
                       <td className="py-3 px-4 whitespace-nowrap font-mono text-[11px] text-slate-500">
-                        {log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : 'N/A'}
+                        {log.timestamp
+                          ? new Date(log.timestamp).toLocaleTimeString()
+                          : "N/A"}
                       </td>
 
                       <td className="py-3 px-4 text-right whitespace-nowrap">

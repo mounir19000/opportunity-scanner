@@ -49,9 +49,7 @@ export default function SourcesPage({ onFetchRepo, isSyncing, lastFetchedRepo })
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
-              <Database className="w-5 h-5" />
-            </div>
+            <Database className="w-6 h-6 text-cyan-500" />
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
               Curated Opportunity Repositories ({repoList.length})
             </h1>
@@ -101,7 +99,7 @@ export default function SourcesPage({ onFetchRepo, isSyncing, lastFetchedRepo })
           return (
             <div
               key={repo.name}
-              className="flex flex-col justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-5 shadow-sm hover:shadow-md transition duration-200"
+              className="flex flex-col justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5   transition duration-200"
             >
               <div>
                 {/* Header Category & Stars */}

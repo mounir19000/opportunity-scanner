@@ -10,7 +10,7 @@ export default function OpportunityTable({
   onSort,
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-slate-900/60 backdrop-blur-md shadow-lg">
+    <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-slate-900  ">
       <table className="w-full text-left text-xs">
         <thead className="bg-slate-800/60 text-slate-300 font-mono font-semibold border-b border-white/[0.08] uppercase tracking-wider text-[10px]">
           <tr>
