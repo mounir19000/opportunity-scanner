@@ -23,7 +23,7 @@ Keep sources only when they contain actual internships, schools, or research pro
 
 ## Implemented result
 
-- Reduced the source manifest to six reviewed repositories and refreshed the bundled snapshot on 5 October 2026. The final snapshot has 2,201 deduplicated leads.
+- Reduced the source manifest to four reviewed repositories and refreshed the bundled snapshot on 5 October 2026. The final snapshot has 2,559 deduplicated leads.
 - Replaced the malformed prebuild script, corrected table header and fee parsing, removed invented open/paid/location values, and preserved the prior snapshot on a failed rebuild.
 - Added one filter engine with exact source and category matching, explicit funding and deadline classification, chronological sorting, and regression tests.
 - Rebuilt the explorer, source directory, tracker, insights, activity view, detail dialog, navigation, and visual styles. Removed the unrelated deploy guide and unused components.

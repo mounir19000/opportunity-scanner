@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { deadlineState, filterOpportunities } from '../src/services/filters.js';
-import { fundingKind, isUsefulOpportunity, sourceKey } from '../src/services/opportunityData.js';
+import { fundingKind, isUsefulOpportunity, normalizeOpportunity, sourceKey } from '../src/services/opportunityData.js';
 
 const today = new Date('2026-10-05T12:00:00Z');
 const items = [
@@ -44,4 +44,14 @@ test('curation rejects badges, repository self-links, and expired listings', () 
   assert.equal(isUsefulOpportunity({ ...base, url: 'https://img.shields.io/badge/-Apply-blue' }, today), false);
   assert.equal(isUsefulOpportunity({ ...base, url: 'https://github.com/a/roles' }, today), false);
   assert.equal(isUsefulOpportunity({ ...base, deadline: '2026-09-01' }, today), false);
+});
+
+
+test('school link uses the verified organizer destination', () => {
+  const item = normalizeOpportunity({
+    title: '7th Annual Nepal AI School',
+    sourceRepo: 'hazratali/awesome-ai-summerschool',
+    url: 'https://anais.naamii.org.np/?utm_source=gemini',
+  });
+  assert.equal(item.url, 'https://www.naamii.org/anais');
 });
