@@ -2,6 +2,8 @@
 // Supports: Markdown tables (with/without outer pipes), HTML <table> elements,
 // Markdown bullet lists, Embedded JSON datasets, and multi-branch/file fallbacks.
 
+import { cleanUnknown, dedupeOpportunities, isUsefulOpportunity, normalizeOpportunity } from './opportunityData.js';
+
 export function cleanText(str) {
   if (!str) return '';
   return str
@@ -72,7 +74,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
   const opportunities = [];
   let inTable = false;
   let headerIndexMap = null;
-  let lastHost = repoInfo.owner;
+  let lastHost = '';
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i].trim();
@@ -96,28 +98,15 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       continue;
     }
 
-    const isHeader = rawCells.some((c) => {
-      const lower = c.toLowerCase();
-      return (
-        lower.includes('name') ||
-        lower.includes('company') ||
-        lower.includes('program') ||
-        lower.includes('role') ||
-        lower.includes('title') ||
-        lower.includes('venue') ||
-        lower.includes('location') ||
-        lower.includes('deadline') ||
-        lower.includes('organizer') ||
-        lower.includes('fee') ||
-        lower.includes('scholarship') ||
-        lower.includes('stipend')
-      );
-    });
+    const headerLabels = rawCells.map((cell) => cleanText(cell).toLowerCase().replace(/[^a-z0-9 ]/g, '').trim());
+    const knownHeaders = /^(name|company|program|role|title|venue|location|city|country|deadline|due|apply by|closes|organizers?|hosts?|university|institute|fee|scholarship|stipend|salary|aid|funding|date|timeline|duration|period|eligibility|level|target|audience|apply|link|url)$/;
+    const isHeader = headerLabels.filter((label) => knownHeaders.test(label)).length >= 2
+      && headerLabels.some((label) => /^(name|company|program|role|title)$/.test(label));
 
     if (isHeader) {
       headerIndexMap = {};
       rawCells.forEach((c, idx) => {
-        const lower = c.toLowerCase();
+        const lower = headerLabels[idx];
         if (lower.includes('name') || lower.includes('program') || lower.includes('title') || lower.includes('role')) {
           if (headerIndexMap.title === undefined) headerIndexMap.title = idx;
         }
@@ -133,7 +122,8 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         if (lower.includes('date') || lower.includes('timeline') || lower.includes('duration') || lower.includes('period')) {
           headerIndexMap.dates = idx;
         }
-        if (lower.includes('fee') || lower.includes('stipend') || lower.includes('salary') || lower.includes('aid') || lower.includes('scholarship') || lower.includes('funding')) {
+        if (lower === 'fee') headerIndexMap.fee = idx;
+        if (lower.includes('stipend') || lower.includes('salary') || lower.includes('aid') || lower.includes('scholarship') || lower.includes('funding')) {
           headerIndexMap.stipend = idx;
         }
         if (lower.includes('eligibility') || lower.includes('level') || lower.includes('target') || lower.includes('audience')) {
@@ -154,6 +144,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       const deadlineCell = headerIndexMap.deadline !== undefined ? rawCells[headerIndexMap.deadline] : '';
       const datesCell = headerIndexMap.dates !== undefined ? rawCells[headerIndexMap.dates] : '';
       const stipendCell = headerIndexMap.stipend !== undefined ? rawCells[headerIndexMap.stipend] : '';
+      const feeCell = headerIndexMap.fee !== undefined ? rawCells[headerIndexMap.fee] : '';
       const eligCell = headerIndexMap.eligibility !== undefined ? rawCells[headerIndexMap.eligibility] : '';
       const urlCell = headerIndexMap.url !== undefined ? rawCells[headerIndexMap.url] : '';
 
@@ -173,12 +164,12 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         lastHost = host;
       }
 
-      const applyUrl = parsedTitle.url || parsedUrl.url || (urlCell.startsWith('http') ? urlCell : repoInfo.url);
-      const location = cleanText(locCell) || 'Global / Online';
-      const deadline = cleanText(deadlineCell) || 'Rolling / Open';
+      const applyUrl = parsedTitle.url || parsedUrl.url || (urlCell.startsWith('http') ? urlCell : '');
+      const location = cleanText(locCell);
+      const deadline = cleanText(deadlineCell);
       const dates = cleanText(datesCell);
-      const stipend = cleanText(stipendCell) || 'See program details';
-      const eligibility = cleanText(eligCell) || repoInfo.target_audience || 'All eligible students & researchers';
+      const stipend = [cleanText(stipendCell), cleanText(feeCell)].map(cleanUnknown).filter(Boolean).join(' · ');
+      const eligibility = cleanText(eligCell);
 
       const repoIdentifier = `${repoInfo.owner}/${repoInfo.name}`;
       const id = `${repoInfo.owner}_${repoInfo.name}_${opportunities.length + 1}_${title.slice(0, 18).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
@@ -186,7 +177,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       opportunities.push({
         id,
         title,
-        host: host || repoInfo.owner,
+        host: host || '',
         category: repoInfo.category || 'General',
         type: inferType(title, repoInfo.category),
         location,
@@ -225,8 +216,8 @@ export function parseHtmlTable(htmlText, repoInfo) {
 
     let company = cells[0];
     let role = cells[1];
-    let location = cells[2] || 'Remote / US / Global';
-    let applyLink = links.find((l) => l.includes('http') && !l.includes('simplify.jobs/c/')) || links[0] || repoInfo.url;
+    let location = cells[2] || '';
+    let applyLink = links.find((l) => l.startsWith('http') && !l.includes('simplify.jobs/c/')) || links.find((l) => l.startsWith('http')) || '';
 
     if (!role || role.length < 2) continue;
 
@@ -247,11 +238,11 @@ export function parseHtmlTable(htmlText, repoInfo) {
       category: repoInfo.category || 'Tech & Software Engineering Internships',
       type: inferType(role, repoInfo.category),
       location,
-      deadline: 'Actively accepting applications',
-      dates: 'Summer 2026/2027',
-      stipend: 'Paid position (Competitive compensation)',
-      eligibility: repoInfo.target_audience || 'Undergrad & Grad Students',
-      notes: `Extracted from ${repoIdentifier} active listings`,
+      deadline: '',
+      dates: '',
+      stipend: '',
+      eligibility: '',
+      notes: '',
       url: applyLink,
       sourceRepo: repoIdentifier,
       discoveredAt: new Date().toISOString(),
@@ -283,14 +274,14 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
     opportunities.push({
       id,
       title: parsed.text,
-      host: repoInfo.owner,
+      host: '',
       category: repoInfo.category || 'General Opportunities',
       type: inferType(parsed.text, repoInfo.category),
-      location: 'Check program website',
-      deadline: 'See website / Rolling',
+      location: '',
+      deadline: '',
       dates: '',
-      stipend: 'Check official announcement',
-      eligibility: repoInfo.target_audience || 'Students & Researchers',
+      stipend: '',
+      eligibility: '',
       notes: line.replace(/\[([^\]]+)\]\(([^)]+)\)/, '').replace(/^[-*0-9.]+\s*/, '').trim(),
       url: parsed.url,
       sourceRepo: repoIdentifier,
@@ -372,6 +363,7 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     opportunities = parseMarkdownBullets(content, repo);
   }
 
+  opportunities = dedupeOpportunities(opportunities.map(normalizeOpportunity).filter((item) => isUsefulOpportunity(item)));
   const isSuccess = opportunities.length > 0;
   const logEntry = {
     id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,

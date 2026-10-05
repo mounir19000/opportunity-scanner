@@ -1,476 +1,76 @@
-import React, { useState, useMemo } from "react";
-import StatsOverview from "../components/StatsOverview";
-import FilterBar from "../components/FilterBar";
-import OpportunityCard from "../components/OpportunityCard";
-import OpportunityTable from "../components/OpportunityTable";
-import {
-  SearchX,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
+import React, { useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, SearchX } from 'lucide-react';
+import FilterBar from '../components/FilterBar';
+import OpportunityCard from '../components/OpportunityCard';
+import { DEFAULT_FILTERS, deadlineState, filterOpportunities } from '../services/filters';
+import { sourceKey } from '../services/opportunityData';
 
-const ITEMS_PER_PAGE = 24;
+const PAGE_SIZE = 20;
 
-export default function ExplorerPage({
-  opportunities = [],
-  savedIds = new Set(),
-  onToggleSave,
-  onSelectOpportunity,
-  sourcesCount = 99,
-}) {
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedFunding, setSelectedFunding] = useState("all");
-  const [selectedDeadlineFilter, setSelectedDeadlineFilter] = useState("all");
-  const [selectedLocation, setSelectedLocation] = useState("all");
-  const [selectedRepo, setSelectedRepo] = useState("all");
-  const [sortBy, setSortBy] = useState("featured");
-  const [viewMode, setViewMode] = useState("grid");
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Derived unique lists for filters
-  const allCategories = useMemo(() => {
-    const set = new Set();
-    opportunities.forEach((o) => {
-      if (o.category) set.add(o.category);
-    });
-    return Array.from(set).sort();
-  }, [opportunities]);
-
-  const allRepos = useMemo(() => {
-    const set = new Set();
-    opportunities.forEach((o) => {
-      if (o.sourceRepo) set.add(o.sourceRepo);
-      const repoName =
-        typeof o.sourceRepo === "string"
-          ? o.sourceRepo
-          : o.sourceRepo?.name || "";
-      if (repoName) set.add(repoName);
-    });
-    return Array.from(set).sort();
-  }, [opportunities]);
-
-  // Overall metric counts
-  const paidCount = useMemo(() => {
-    return opportunities.filter(
-      (o) =>
-        o.stipend &&
-        !o.stipend.toLowerCase().includes("fee required") &&
-        !o.stipend.toLowerCase().includes("not available") &&
-        !o.stipend.toLowerCase().includes("na"),
-    ).length;
-  }, [opportunities]);
-
-  const upcomingDeadlinesCount = useMemo(() => {
-    return opportunities.filter(
-      (o) => o.deadline && !o.deadline.toLowerCase().includes("passed"),
-    ).length;
-  }, [opportunities]);
-
-  // Filtering engine
-  const filteredOpportunities = useMemo(() => {
-    return opportunities.filter((item) => {
-      // 1. Text Search
-      if (searchTerm.trim()) {
-        const query = searchTerm.toLowerCase();
-        const matchesTitle = item.title?.toLowerCase().includes(query);
-        const matchesHost = item.host?.toLowerCase().includes(query);
-        const matchesDesc = item.notes?.toLowerCase().includes(query);
-        const matchesLocation = item.location?.toLowerCase().includes(query);
-        const matchesRepo = item.sourceRepo?.toLowerCase().includes(query);
-        if (
-          !matchesTitle &&
-          !matchesHost &&
-          !matchesDesc &&
-          !matchesLocation &&
-          !matchesRepo
-        ) {
-          return false;
-        }
-      }
-
-      // 2. Category
-      if (selectedCategory !== "all") {
-        if (
-          !item.category ||
-          !item.category.toLowerCase().includes(selectedCategory.toLowerCase())
-        ) {
-          return false;
-        }
-      }
-
-      // 3. Type
-      if (selectedType !== "all") {
-        if (
-          !item.type ||
-          !item.type.toLowerCase().includes(selectedType.toLowerCase())
-        ) {
-          return false;
-        }
-      }
-
-      // 4. Funding
-      if (selectedFunding !== "all") {
-        const stipendLower = (item.stipend || "").toLowerCase();
-        if (selectedFunding === "paid") {
-          if (
-            !stipendLower ||
-            stipendLower.includes("not available") ||
-            stipendLower.includes("fee required") ||
-            stipendLower.includes("na")
-          ) {
-            return false;
-          }
-        } else if (selectedFunding === "travel") {
-          if (
-            !stipendLower.includes("travel") &&
-            !stipendLower.includes("grant") &&
-            !stipendLower.includes("aid")
-          ) {
-            return false;
-          }
-        } else if (selectedFunding === "tuition-free") {
-          if (
-            !stipendLower.includes("free") &&
-            !stipendLower.includes("waive") &&
-            !stipendLower.includes("funded")
-          ) {
-            return false;
-          }
-        }
-      }
-
-      // 5. Deadline status
-      if (selectedDeadlineFilter !== "all") {
-        const dl = (item.deadline || "").toLowerCase();
-        if (selectedDeadlineFilter === "upcoming") {
-          if (
-            !dl ||
-            dl.includes("passed") ||
-            dl.includes("closed") ||
-            dl.includes("expired")
-          ) {
-            return false;
-          }
-        } else if (selectedDeadlineFilter === "hasDeadline") {
-          if (
-            !dl ||
-            dl === "n/a" ||
-            dl.includes("tbd") ||
-            dl.includes("check")
-          ) {
-            return false;
-          }
-        } else if (selectedDeadlineFilter === "rolling") {
-          if (
-            !dl.includes("rolling") &&
-            !dl.includes("open") &&
-            !dl.includes("anytime")
-          ) {
-            return false;
-          }
-        }
-      }
-
-      // 6. Location
-      if (selectedLocation !== "all") {
-        const loc = (item.location || "").toLowerCase();
-        if (selectedLocation === "remote") {
-          if (
-            !loc.includes("remote") &&
-            !loc.includes("virtual") &&
-            !loc.includes("online")
-          ) {
-            return false;
-          }
-        } else if (selectedLocation === "us") {
-          if (
-            !loc.includes("usa") &&
-            !loc.includes("united states") &&
-            !loc.includes("us")
-          ) {
-            return false;
-          }
-        } else if (selectedLocation === "europe") {
-          const euKeywords = [
-            "europe",
-            "germany",
-            "uk",
-            "france",
-            "italy",
-            "spain",
-            "switzerland",
-            "netherlands",
-          ];
-          if (!euKeywords.some((k) => loc.includes(k))) return false;
-        } else if (selectedLocation === "asia") {
-          const asiaKeywords = [
-            "asia",
-            "japan",
-            "china",
-            "singapore",
-            "korea",
-            "taiwan",
-            "india",
-          ];
-          if (!asiaKeywords.some((k) => loc.includes(k))) return false;
-        } else if (selectedLocation === "international") {
-          if (
-            !loc.includes("international") &&
-            !loc.includes("worldwide") &&
-            !loc.includes("global")
-          ) {
-            return false;
-          }
-        }
-      }
-
-      // 7. Source Repo
-      if (selectedRepo !== "all") {
-        if (item.sourceRepo !== selectedRepo) return false;
-        const repoName =
-          typeof item.sourceRepo === "string"
-            ? item.sourceRepo
-            : item.sourceRepo?.name || "";
-        if (repoName !== selectedRepo) return false;
-      }
-
-      return true;
-    });
-  }, [
-    opportunities,
-    searchTerm,
-    selectedCategory,
-    selectedType,
-    selectedFunding,
-    selectedDeadlineFilter,
-    selectedLocation,
-    selectedRepo,
-  ]);
-
-  // Sorting
-  const sortedOpportunities = useMemo(() => {
-    const list = [...filteredOpportunities];
-    if (sortBy === "title-asc") {
-      return list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-    }
-    if (sortBy === "host-asc") {
-      return list.sort((a, b) => (a.host || "").localeCompare(b.host || ""));
-    }
-    if (sortBy === "stipend") {
-      return list.sort((a, b) => ((b.stipend || "").length > 5 ? 1 : -1));
-    }
-    if (sortBy === "deadline-asc") {
-      return list.sort((a, b) => {
-        if (!a.deadline) return 1;
-        if (!b.deadline) return -1;
-        return a.deadline.localeCompare(b.deadline);
-      });
-    }
-    if (sortBy === "deadline-desc") {
-      return list.sort((a, b) => {
-        if (!a.deadline) return 1;
-        if (!b.deadline) return -1;
-        return b.deadline.localeCompare(a.deadline);
-      });
-    }
-    return list; // featured
-  }, [filteredOpportunities, sortBy]);
-
-  // Reset page on filter changes
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setSelectedCategory("all");
-    setSelectedType("all");
-    setSelectedFunding("all");
-    setSelectedDeadlineFilter("all");
-    setSelectedLocation("all");
-    setSelectedRepo("all");
-    setSortBy("featured");
-    setCurrentPage(1);
-  };
-
-  // Pagination calculation
-  const totalPages =
-    Math.ceil(sortedOpportunities.length / ITEMS_PER_PAGE) || 1;
-  const validCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
-  const startIndex = (validCurrentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedOpportunities = sortedOpportunities.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
-  );
+export default function ExplorerPage({ opportunities = [], savedIds = new Set(), onToggleSave, onSelectOpportunity, sourcesCount = 0 }) {
+  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
+  const [page, setPage] = useState(1);
+  const categories = useMemo(() => [...new Set(opportunities.map((item) => item.category).filter(Boolean))].sort(), [opportunities]);
+  const types = useMemo(() => [...new Set(opportunities.map((item) => item.type).filter(Boolean))].sort(), [opportunities]);
+  const repos = useMemo(() => [...new Set(opportunities.map((item) => sourceKey(item.sourceRepo)).filter(Boolean))].sort(), [opportunities]);
+  const results = useMemo(() => filterOpportunities(opportunities, filters), [opportunities, filters]);
+  const dated = useMemo(() => opportunities.filter((item) => deadlineState(item.deadline).kind === 'upcoming').length, [opportunities]);
+  const pages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pages);
+  const visible = results.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const update = (key, value) => { setFilters((previous) => ({ ...previous, [key]: value })); setPage(1); };
+  const reset = () => { setFilters({ ...DEFAULT_FILTERS }); setPage(1); };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Top Hero KPI Bar */}
-      <StatsOverview
-        totalCount={opportunities.length}
-        paidCount={paidCount}
-        upcomingDeadlinesCount={upcomingDeadlinesCount}
-        sourcesCount={sourcesCount}
-      />
-
-      {/* Filter and Search Bar */}
-      <FilterBar
-        searchTerm={searchTerm}
-        setSearchTerm={(term) => {
-          setSearchTerm(term);
-          setCurrentPage(1);
-        }}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={(cat) => {
-          setSelectedCategory(cat);
-          setCurrentPage(1);
-        }}
-        selectedType={selectedType}
-        setSelectedType={(t) => {
-          setSelectedType(t);
-          setCurrentPage(1);
-        }}
-        selectedFunding={selectedFunding}
-        setSelectedFunding={(f) => {
-          setSelectedFunding(f);
-          setCurrentPage(1);
-        }}
-        selectedDeadlineFilter={selectedDeadlineFilter}
-        setSelectedDeadlineFilter={(d) => {
-          setSelectedDeadlineFilter(d);
-          setCurrentPage(1);
-        }}
-        selectedLocation={selectedLocation}
-        setSelectedLocation={(loc) => {
-          setSelectedLocation(loc);
-          setCurrentPage(1);
-        }}
-        selectedRepo={selectedRepo}
-        setSelectedRepo={(repo) => {
-          setSelectedRepo(repo);
-          setCurrentPage(1);
-        }}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        totalResults={filteredOpportunities.length}
-        allCategories={allCategories}
-        allRepos={allRepos}
-        onResetFilters={handleResetFilters}
-      />
-
-      {/* Main Content Area */}
-      {paginatedOpportunities.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 my-6">
-          <SearchX className="w-8 h-8 text-slate-400 mb-3" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">
-            No matching opportunities found
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-4">
-            Try adjusting your search query, selecting "All" categories, or
-            clearing active filters.
-          </p>
-          <button
-            onClick={handleResetFilters}
-            className="px-4 py-2 text-xs font-semibold rounded-xl bg-brand-600 hover:bg-brand-500 text-white transition "
-          >
-            Clear All Filters
-          </button>
+    <div className="radar-page">
+      <section className="radar-hero">
+        <div className="radar-hero-copy">
+          <div className="radar-eyebrow"><span className="radar-eyebrow-line" /> THE OPPORTUNITY INDEX</div>
+          <h1>Find your<br /><em>next move.</em></h1>
+          <p>Internships, research programs, and summer schools from a small set of useful sources. Explore the leads, then confirm details with the host.</p>
         </div>
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {paginatedOpportunities.map((opportunity) => (
-            <OpportunityCard
-              key={opportunity.id}
-              opportunity={opportunity}
-              isSaved={savedIds.has(opportunity.id)}
-              onToggleSave={onToggleSave}
-              onSelect={onSelectOpportunity}
-            />
-          ))}
+        <div className="radar-hero-metrics">
+          <div><strong>{opportunities.length.toLocaleString()}</strong><span>curated leads</span></div>
+          <div><strong>{sourcesCount}</strong><span>tracked sources</span></div>
+          <div><strong>{dated.toLocaleString()}</strong><span>upcoming dated deadlines</span></div>
         </div>
-      ) : (
-        <div className="mb-8">
-          <OpportunityTable
-            opportunities={paginatedOpportunities}
-            savedIds={savedIds}
-            onToggleSave={onToggleSave}
-            onSelect={onSelectOpportunity}
-            sortConfig={{ key: sortBy, direction: "asc" }}
-            onSort={(key) => {
-              if (key === "title") setSortBy("title-asc");
-              if (key === "deadline") setSortBy("deadline-asc");
-              if (key === "type") setSortBy("featured");
-            }}
-          />
-        </div>
-      )}
+      </section>
 
-      {/* Pagination Bar */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
-          <div>
-            Showing{" "}
-            <strong className="text-slate-800 dark:text-slate-200">
-              {startIndex + 1}
-            </strong>{" "}
-            to{" "}
-            <strong className="text-slate-800 dark:text-slate-200">
-              {Math.min(
-                startIndex + ITEMS_PER_PAGE,
-                sortedOpportunities.length,
-              )}
-            </strong>{" "}
-            of{" "}
-            <strong className="text-slate-800 dark:text-slate-200">
-              {sortedOpportunities.length}
-            </strong>{" "}
-            opportunities
+      <div className="radar-content">
+        <FilterBar filters={filters} onChange={update} onReset={reset} categories={categories} types={types} repos={repos} totalResults={results.length} />
+        <section className="radar-results" aria-label="Search results">
+          <div className="radar-results-header">
+            <div>
+              <span className="radar-kicker">BROWSE THE INDEX</span>
+              <h2>{results.length.toLocaleString()} opportunities</h2>
+              <p>Source listings can change. Check the original page before applying.</p>
+            </div>
+            <label className="radar-sort">Sort by
+              <select value={filters.sort} onChange={(event) => update('sort', event.target.value)}>
+                <option value="featured">Source order</option>
+                <option value="deadline-asc">Nearest deadline</option>
+                <option value="deadline-desc">Latest deadline</option>
+                <option value="title">Title A–Z</option>
+                <option value="host">Host A–Z</option>
+              </select>
+            </label>
           </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={validCurrentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
-              title="First Page"
-            >
-              <ChevronsLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={validCurrentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
-              title="Previous Page"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <span className="px-3 py-1 font-semibold text-slate-800 dark:text-slate-200">
-              Page {validCurrentPage} of {totalPages}
-            </span>
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={validCurrentPage === totalPages}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
-              title="Next Page"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={validCurrentPage === totalPages}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
-              title="Last Page"
-            >
-              <ChevronsRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+          {visible.length ? (
+            <div className="radar-result-list">
+              {visible.map((opportunity) => <OpportunityCard key={opportunity.id} opportunity={opportunity} isSaved={savedIds.has(opportunity.id)} onToggleSave={onToggleSave} onSelect={onSelectOpportunity} />)}
+            </div>
+          ) : (
+            <div className="radar-empty"><SearchX size={30} /><h3>No leads match these filters</h3><p>Try a broader search or clear your filters.</p><button onClick={reset} type="button">Clear filters</button></div>
+          )}
+          {pages > 1 && <div className="radar-pagination">
+            <span>Page {currentPage} of {pages}</span>
+            <div>
+              <button onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={currentPage === 1} aria-label="Previous page" type="button"><ArrowLeft size={17} /></button>
+              <button onClick={() => setPage((value) => Math.min(pages, value + 1))} disabled={currentPage === pages} aria-label="Next page" type="button"><ArrowRight size={17} /></button>
+            </div>
+          </div>}
+        </section>
+      </div>
     </div>
   );
 }
