@@ -7,7 +7,8 @@ const SETTINGS_KEY = 'opportunity_scout_settings';
 export const getSavedItems = () => {
   try {
     const raw = localStorage.getItem(SAVED_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     console.error('Failed to load saved items from localStorage', e);
     return [];
@@ -79,7 +80,8 @@ export const removeSavedItem = (id) => {
 export const getIngestionLogs = () => {
   try {
     const raw = localStorage.getItem(LOGS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     return [];
   }
@@ -105,7 +107,8 @@ export const clearIngestionLogs = () => {
 export const getSettings = () => {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    return raw ? JSON.parse(raw) : { theme: 'dark', githubToken: '' };
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { theme: 'dark' };
   } catch (e) {
     return { theme: 'dark', githubToken: '' };
   }
