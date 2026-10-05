@@ -87,11 +87,11 @@ export default function DetailModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80    duration-200"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/[0.1] bg-[#0F172A]/95 text-slate-100 shadow-2xl p-6 sm:p-8 backdrop-blur-2xl"
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/[0.1] bg-[#0F172A] text-slate-100  p-6 sm:p-8 "
       >
         {/* Close Button */}
         <button
@@ -131,7 +131,7 @@ export default function DetailModal({
         )}
 
         {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 rounded-xl bg-slate-900/80 border border-white/[0.08] mb-6 font-mono">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 rounded-xl bg-slate-900 border border-white/[0.08] mb-6 font-mono">
           {/* Deadline */}
           <div className="flex items-start gap-3">
             <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -176,7 +176,7 @@ export default function DetailModal({
                 <GraduationCap className="w-4 h-4 text-brand-400" />
                 Target Audience & Eligibility
               </h4>
-              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.08] text-slate-300 text-xs sm:text-sm leading-relaxed">
+              <div className="p-3.5 rounded-xl bg-slate-900 border border-white/[0.08] text-slate-300 text-xs sm:text-sm leading-relaxed">
                 {eligibility}
               </div>
             </div>
@@ -214,7 +214,7 @@ export default function DetailModal({
         </div>
 
         {/* Application Tracker & Personal Notes */}
-        <div className="p-4 rounded-xl border border-white/[0.08] bg-slate-900/60 mb-6">
+        <div className="p-4 rounded-xl border border-white/[0.08] bg-slate-900 mb-6">
           <div className="flex items-center justify-between mb-3">
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-slate-300">
               Your Application Pipeline
@@ -231,10 +231,10 @@ export default function DetailModal({
               }}
               className="font-mono text-xs font-semibold py-1 px-2.5 rounded-lg border border-white/[0.08] bg-slate-800 text-white focus:outline-none focus:border-brand-500"
             >
-              <option value="saved">📌 Saved for Later</option>
-              <option value="applied">🚀 Applied</option>
-              <option value="interviewing">🗣️ Interviewing</option>
-              <option value="offered">🎉 Offer Received</option>
+              <option value="saved">Saved for Later</option>
+              <option value="applied">Applied</option>
+              <option value="interviewing">Interviewing</option>
+              <option value="offered">Offer Received</option>
             </select>
           </div>
 
@@ -285,7 +285,7 @@ export default function DetailModal({
             href={url || repoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-cyan-500 hover:from-brand-500 hover:to-cyan-400 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-brand-500/20 hover:shadow-glow-brand transition"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-cyan-500 hover:from-brand-500 hover:to-cyan-400 text-white font-semibold text-xs sm:text-sm    transition"
           >
             <span>Apply / Visit Official Site</span>
             <ExternalLink className="w-4 h-4" />

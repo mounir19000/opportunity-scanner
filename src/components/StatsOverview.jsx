@@ -56,9 +56,8 @@ export default function StatsOverview({ totalCount, paidCount, upcomingDeadlines
         return (
           <div
             key={i}
-            className={`relative overflow-hidden rounded-xl border ${stat.borderColor} bg-slate-900/60 backdrop-blur-md p-4 transition-all duration-200 hover:border-slate-700 hover:shadow-lg`}
+            className={`relative overflow-hidden rounded-xl border ${stat.borderColor} bg-slate-900  p-4 transition-all duration-200 hover:border-slate-700 `}
           >
-            <div className={`absolute -top-12 -right-12 w-28 h-28 bg-gradient-to-b ${stat.bgGlow} rounded-full blur-xl pointer-events-none`} />
 
             <div className="flex items-center justify-between mb-2">
               <span className="font-mono text-[10px] tracking-wider font-semibold text-slate-400 uppercase">

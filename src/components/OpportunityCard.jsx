@@ -73,7 +73,7 @@ export default function OpportunityCard({
   return (
     <div
       onClick={() => onSelect(opportunity)}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-white/[0.08] dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/65 backdrop-blur-md p-4 sm:p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:border-brand-500/50 cursor-pointer"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-white/[0.08] dark:border-slate-800/80 bg-white dark:bg-slate-900  p-4 sm:p-5  transition-all duration-200 hover:-translate-y-0.5  hover:border-brand-500/50 cursor-pointer"
     >
       {/* Left accent strip */}
       <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${style.strip}`} />

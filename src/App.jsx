@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import Navbar from './components/Navbar';
-import DetailModal from './components/DetailModal';
-import DeploymentModal from './components/DeploymentModal';
-import ExplorerPage from './pages/ExplorerPage';
-import AnalyticsPage from './pages/AnalyticsPage';
-import SourcesPage from './pages/SourcesPage';
-import LogsPage from './pages/LogsPage';
-import SavedPage from './pages/SavedPage';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import Navbar from "./components/Navbar";
+import DetailModal from "./components/DetailModal";
+import DeploymentModal from "./components/DeploymentModal";
+import ExplorerPage from "./pages/ExplorerPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import SourcesPage from "./pages/SourcesPage";
+import LogsPage from "./pages/LogsPage";
+import SavedPage from "./pages/SavedPage";
 
-import initialOpportunitiesData from './data/initialOpportunities.json';
-import initialLogsData from './data/initialLogs.json';
-import reposData from './data/repositories.json';
+import initialOpportunitiesData from "./data/initialOpportunities.json";
+import initialLogsData from "./data/initialLogs.json";
+import reposData from "./data/repositories.json";
 
 import {
   getSavedItems,
@@ -22,24 +22,26 @@ import {
   clearIngestionLogs,
   getSettings,
   saveSettings,
-} from './services/storage';
+} from "./services/storage";
 
-import { fetchRepositoryOpportunities } from './services/githubFetcher';
-import { CheckCircle2, AlertCircle, Info, Sparkles, X } from 'lucide-react';
+import { fetchRepositoryOpportunities } from "./services/githubFetcher";
+import { CheckCircle2, AlertCircle, Info, Sparkles, X } from "lucide-react";
 
 export default function App() {
   // Theme state (default: dark)
   const [theme, setTheme] = useState(() => {
     const saved = getSettings();
-    return saved.theme || 'dark';
+    return saved.theme || "dark";
   });
 
   // Active navigation tab
-  const [activeTab, setActiveTab] = useState('explorer');
+  const [activeTab, setActiveTab] = useState("explorer");
 
   // Opportunities dataset
   const [opportunities, setOpportunities] = useState(() => {
-    return Array.isArray(initialOpportunitiesData) ? initialOpportunitiesData : [];
+    return Array.isArray(initialOpportunitiesData)
+      ? initialOpportunitiesData
+      : [];
   });
 
   // Saved items pipeline
@@ -63,7 +65,7 @@ export default function App() {
   // Toast notification
   const [toast, setToast] = useState(null);
 
-  const showToast = useCallback((message, type = 'info') => {
+  const showToast = useCallback((message, type = "info") => {
     setToast({ message, type });
     setTimeout(() => {
       setToast(null);
@@ -73,10 +75,10 @@ export default function App() {
   // Sync theme with HTML class
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
+    if (theme === "dark") {
+      root.classList.add("dark");
     } else {
-      root.classList.remove('dark');
+      root.classList.remove("dark");
     }
     saveSettings({ theme });
   }, [theme]);
@@ -87,7 +89,7 @@ export default function App() {
   }, [logs]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   // Saved IDs set for fast O(1) card lookups
@@ -97,19 +99,19 @@ export default function App() {
 
   // Count error logs for navbar badge
   const errorLogsCount = useMemo(() => {
-    return logs.filter((l) => l.status === 'error').length;
+    return logs.filter((l) => l.status === "error").length;
   }, [logs]);
 
   // Bookmark / Save toggle handler
-  const handleToggleSave = (opportunity, status = 'saved', notes = '') => {
+  const handleToggleSave = (opportunity, status = "saved", notes = "") => {
     if (savedIds.has(opportunity.id)) {
       const updated = removeSavedItem(opportunity.id);
       setSavedItems(updated);
-      showToast(`Removed "${opportunity.title}" from saved items`, 'info');
+      showToast(`Removed "${opportunity.title}" from saved items`, "info");
     } else {
       const updated = saveItem(opportunity, status, notes);
       setSavedItems(updated);
-      showToast(`Saved "${opportunity.title}" to your tracker!`, 'success');
+      showToast(`Saved "${opportunity.title}" to your tracker!`, "success");
     }
   };
 
@@ -117,26 +119,26 @@ export default function App() {
   const handleUpdateStatus = (id, newStatus, newNotes = null) => {
     const updated = updateItemStatus(id, newStatus, newNotes);
     setSavedItems(updated);
-    showToast(`Updated status to: ${newStatus}`, 'success');
+    showToast(`Updated status to: ${newStatus}`, "success");
   };
 
   // Remove single saved item
   const handleRemoveSaved = (id) => {
     const updated = removeSavedItem(id);
     setSavedItems(updated);
-    showToast('Item removed from tracker', 'info');
+    showToast("Item removed from tracker", "info");
   };
 
   // Clear logs handler
   const handleClearLogs = () => {
     clearIngestionLogs();
     setLogs([]);
-    showToast('Logs history cleared', 'info');
+    showToast("Logs history cleared", "info");
   };
 
   // Extract repositories list
   const repositoryList = useMemo(() => {
-    return Array.isArray(reposData) ? reposData : (reposData.repositories || []);
+    return Array.isArray(reposData) ? reposData : reposData.repositories || [];
   }, []);
 
   // Fetch single repository live
@@ -149,36 +151,52 @@ export default function App() {
       (r) =>
         r.name === repoIdentifier ||
         `${r.owner}/${r.name}` === repoIdentifier ||
-        r.url?.includes(repoIdentifier)
+        r.url?.includes(repoIdentifier),
     ) || {
-      name: repoIdentifier.includes('/') ? repoIdentifier.split('/')[1] : repoIdentifier,
-      owner: repoIdentifier.includes('/') ? repoIdentifier.split('/')[0] : 'unknown',
+      name: repoIdentifier.includes("/")
+        ? repoIdentifier.split("/")[1]
+        : repoIdentifier,
+      owner: repoIdentifier.includes("/")
+        ? repoIdentifier.split("/")[0]
+        : "unknown",
       url: `https://github.com/${repoIdentifier}`,
-      category: 'General',
+      category: "General",
     };
 
     try {
-      const token = localStorage.getItem('opportunity_scout_github_token') || '';
+      const token =
+        localStorage.getItem("opportunity_scout_github_token") || "";
       const result = await fetchRepositoryOpportunities(repoObj, token);
 
       // Prepend new log
-      setLogs((prev) => [result.log, ...prev.filter((l) => (l.repoName || l.repo) !== repoObj.name)]);
+      setLogs((prev) => [
+        result.log,
+        ...prev.filter((l) => (l.repoName || l.repo) !== repoObj.name),
+      ]);
 
       if (result.opportunities.length > 0) {
         // Merge unique opportunities
         setOpportunities((prev) => {
           const existingIds = new Set(prev.map((o) => o.id));
-          const newOpps = result.opportunities.filter((o) => !existingIds.has(o.id));
+          const newOpps = result.opportunities.filter(
+            (o) => !existingIds.has(o.id),
+          );
           return [...newOpps, ...prev];
         });
         showToast(
           `Success: Extracted ${result.opportunities.length} opportunities from ${repoObj.name}!`,
-          'success'
+          "success",
         );
-      } else if (result.log.status === 'error') {
-        showToast(`Fetch error for ${repoObj.name}: ${result.log.error}`, 'error');
+      } else if (result.log.status === "error") {
+        showToast(
+          `Fetch error for ${repoObj.name}: ${result.log.error}`,
+          "error",
+        );
       } else {
-        showToast(`Checked ${repoObj.name}: No structured table entries found.`, 'info');
+        showToast(
+          `Checked ${repoObj.name}: No structured table entries found.`,
+          "info",
+        );
       }
     } catch (err) {
       const errorLog = {
@@ -186,14 +204,14 @@ export default function App() {
         repoName: repoObj.name,
         repoOwner: repoObj.owner,
         url: repoObj.url,
-        status: 'error',
+        status: "error",
         statusCode: 0,
         itemsCount: 0,
-        error: err.message || 'Fetch failed',
+        error: err.message || "Fetch failed",
         timestamp: new Date().toISOString(),
       };
       setLogs((prev) => [errorLog, ...prev]);
-      showToast(`Error fetching ${repoObj.name}: ${err.message}`, 'error');
+      showToast(`Error fetching ${repoObj.name}: ${err.message}`, "error");
     } finally {
       setIsSyncing(false);
       setLastFetchedRepo(null);
@@ -202,14 +220,14 @@ export default function App() {
 
   // Retry all failed repos
   const handleRetryFailed = async () => {
-    const failedRepos = logs.filter((l) => l.status === 'error');
+    const failedRepos = logs.filter((l) => l.status === "error");
     if (failedRepos.length === 0) {
-      showToast('No failed repositories to retry.', 'info');
+      showToast("No failed repositories to retry.", "info");
       return;
     }
 
     setIsSyncing(true);
-    showToast(`Retrying ${failedRepos.length} failed repositories...`, 'info');
+    showToast(`Retrying ${failedRepos.length} failed repositories...`, "info");
 
     for (const failedLog of failedRepos) {
       const repoName = failedLog.repoName || failedLog.repo;
@@ -221,7 +239,10 @@ export default function App() {
   // Sync / Refresh all top priority repos
   const handleSyncAll = async () => {
     setIsSyncing(true);
-    showToast('Starting live sync across open-source opportunity repositories...', 'info');
+    showToast(
+      "Starting live sync across open-source opportunity repositories...",
+      "info",
+    );
 
     const sampleRepos = repositoryList.slice(0, 15); // Sync top 15 sources in browser session
     let newItemsCount = 0;
@@ -229,25 +250,34 @@ export default function App() {
     for (const repo of sampleRepos) {
       setLastFetchedRepo(repo.name);
       try {
-        const token = localStorage.getItem('opportunity_scout_github_token') || '';
+        const token =
+          localStorage.getItem("opportunity_scout_github_token") || "";
         const res = await fetchRepositoryOpportunities(repo, token);
-        setLogs((prev) => [res.log, ...prev.filter((l) => (l.repoName || l.repo) !== repo.name)]);
+        setLogs((prev) => [
+          res.log,
+          ...prev.filter((l) => (l.repoName || l.repo) !== repo.name),
+        ]);
         if (res.opportunities.length > 0) {
           newItemsCount += res.opportunities.length;
           setOpportunities((prev) => {
             const existingIds = new Set(prev.map((o) => o.id));
-            const newOpps = res.opportunities.filter((o) => !existingIds.has(o.id));
+            const newOpps = res.opportunities.filter(
+              (o) => !existingIds.has(o.id),
+            );
             return [...newOpps, ...prev];
           });
         }
       } catch (e) {
-        console.warn('Error during batch sync', e);
+        console.warn("Error during batch sync", e);
       }
     }
 
     setIsSyncing(false);
     setLastFetchedRepo(null);
-    showToast(`Sync completed! ${newItemsCount} opportunity records processed.`, 'success');
+    showToast(
+      `Sync completed! ${newItemsCount} opportunity records processed.`,
+      "success",
+    );
   };
 
   return (
@@ -268,7 +298,7 @@ export default function App() {
 
       {/* Main Page Routing */}
       <main className="flex-1">
-        {activeTab === 'explorer' && (
+        {activeTab === "explorer" && (
           <ExplorerPage
             opportunities={opportunities}
             savedIds={savedIds}
@@ -278,14 +308,14 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'analytics' && (
+        {activeTab === "analytics" && (
           <AnalyticsPage
             opportunities={opportunities}
             onSelectOpportunity={(opp) => setSelectedOpportunity(opp)}
           />
         )}
 
-        {activeTab === 'sources' && (
+        {activeTab === "sources" && (
           <SourcesPage
             onFetchRepo={handleFetchRepo}
             isSyncing={isSyncing}
@@ -293,7 +323,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'logs' && (
+        {activeTab === "logs" && (
           <LogsPage
             logs={logs}
             onClearLogs={handleClearLogs}
@@ -304,19 +334,19 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'saved' && (
+        {activeTab === "saved" && (
           <SavedPage
             savedItems={savedItems}
             onUpdateStatus={handleUpdateStatus}
             onRemoveSaved={handleRemoveSaved}
             onSelectOpportunity={(opp) => setSelectedOpportunity(opp)}
-            onNavigateToExplorer={() => setActiveTab('explorer')}
+            onNavigateToExplorer={() => setActiveTab("explorer")}
           />
         )}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur py-6 text-xs text-slate-500 dark:text-slate-400">
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-xs text-slate-500 dark:text-slate-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-800 dark:text-slate-200">
@@ -334,7 +364,7 @@ export default function App() {
               Host on Netlify / Vercel
             </button>
             <button
-              onClick={() => setActiveTab('logs')}
+              onClick={() => setActiveTab("logs")}
               className="hover:text-brand-500 transition"
             >
               Diagnostic Logs ({errorLogsCount} errors)
@@ -364,11 +394,19 @@ export default function App() {
 
       {/* Floating Toast Notification */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-xl bg-white dark:bg-slate-900 text-xs font-semibold animate-in slide-in-from-bottom-3 duration-200 border-slate-200 dark:border-slate-800">
-          {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
-          {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />}
-          {toast.type === 'info' && <Info className="w-4 h-4 text-brand-500 shrink-0" />}
-          <span className="text-slate-800 dark:text-slate-200">{toast.message}</span>
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl border  bg-white dark:bg-slate-900 text-xs font-semibold  slide-in-from-bottom-3 duration-200 border-slate-200 dark:border-slate-800">
+          {toast.type === "success" && (
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          )}
+          {toast.type === "error" && (
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+          )}
+          {toast.type === "info" && (
+            <Info className="w-4 h-4 text-brand-500 shrink-0" />
+          )}
+          <span className="text-slate-800 dark:text-slate-200">
+            {toast.message}
+          </span>
           <button
             onClick={() => setToast(null)}
             className="ml-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -380,4 +418,3 @@ export default function App() {
     </div>
   );
 }
-
