@@ -4,7 +4,6 @@ import { stableOpportunityId } from './opportunityData.js';
 const SAVED_KEY = 'opportunity_scout_saved';
 const LEGACY_SAVED_KEY = 'opportunity_scout_saved_legacy';
 const LOGS_KEY = 'opportunity_scout_logs';
-const SETTINGS_KEY = 'opportunity_scout_settings';
 
 export const getSavedItems = () => {
   try {
@@ -129,27 +128,5 @@ export const clearIngestionLogs = () => {
   try {
     localStorage.removeItem(LOGS_KEY);
   } catch (e) {}
-};
-
-// Settings persistence
-export const getSettings = () => {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { theme: 'light' };
-  } catch (e) {
-    return { theme: 'light' };
-  }
-};
-
-export const saveSettings = (newSettings) => {
-  try {
-    const current = getSettings();
-    const updated = { ...current, ...newSettings };
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
-    return updated;
-  } catch (e) {
-    return getSettings();
-  }
 };
 

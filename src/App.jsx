@@ -14,8 +14,6 @@ import {
   getIngestionLogs,
   saveIngestionLogs,
   clearIngestionLogs,
-  getSettings,
-  saveSettings,
 } from './services/storage';
 import { fetchRepositoryOpportunities } from './services/githubFetcher';
 import { replaceSourceOpportunities, sourceKey } from './services/opportunityData';
@@ -34,7 +32,7 @@ function viewFromUrl() {
 }
 
 export default function App() {
-  const [theme, setTheme] = useState(() => getSettings().theme || 'light');
+  const [theme, setTheme] = useState('light');
   const [activeTab, setActiveTab] = useState(viewFromUrl);
   const [catalog, setCatalog] = useState(() => getCachedOpportunities(reposData) || { items: [], updatedAt: '' });
   const catalogRef = useRef(catalog);
@@ -60,7 +58,6 @@ export default function App() {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
-    saveSettings({ theme });
   }, [theme]);
 
   useEffect(() => { saveIngestionLogs(logs); }, [logs]);
