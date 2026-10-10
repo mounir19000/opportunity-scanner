@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Radar, Search, X } from 'lucide-react';
+import { ArrowRight, ScanSearch, Search, X } from 'lucide-react';
 
 export default function HeroSearch({ search, setSearch, total, sourceCount }) {
   return (
@@ -19,7 +19,7 @@ export default function HeroSearch({ search, setSearch, total, sourceCount }) {
         <div className="sch-hero-art" aria-hidden="true">
           <div className="sch-orbit orbit-one" />
           <div className="sch-orbit orbit-two" />
-          <div className="sch-orbit-center"><Radar size={76} strokeWidth={1.4} /></div>
+          <div className="sch-orbit-center"><ScanSearch size={76} strokeWidth={1.4} /></div>
           <span className="sch-orbit-pill p1">INTERNSHIPS</span>
           <span className="sch-orbit-pill p2">RESEARCH</span>
           <span className="sch-orbit-pill p3">SCHOOLS</span>

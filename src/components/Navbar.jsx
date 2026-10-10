@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bookmark, Database, Menu, Moon, Radar, RefreshCw, Search, Sun, X } from 'lucide-react';
+import { Bookmark, Database, Menu, Moon, RefreshCw, ScanSearch, Search, Sun, X } from 'lucide-react';
 
 const tabs = [
   ['explorer', 'Explore', Search],
@@ -26,9 +26,9 @@ export default function Navbar({ activeTab, onNavigate, theme, toggleTheme, isSy
   return (
     <header className="sch-nav">
       <div className="sch-nav-inner">
-        <a className="sch-brand" href={linkFor('explorer')} onClick={(event) => select(event, 'explorer')} aria-label="Opportunity Radar home">
-          <span className="sch-logo"><Radar size={22} strokeWidth={2.8} /></span>
-          <span>OPPORTUNITY<span className="sch-brand-accent">RADAR</span><small>FIND YOUR NEXT BIG THING</small></span>
+        <a className="sch-brand" href={linkFor('explorer')} onClick={(event) => select(event, 'explorer')} aria-label="Opportunity Scanner home">
+          <span className="sch-logo"><ScanSearch size={22} strokeWidth={2.8} /></span>
+          <span>OPPORTUNITY<span className="sch-brand-accent">SCANNER</span><small>FIND YOUR NEXT BIG THING</small></span>
         </a>
         <nav className={menuOpen ? 'sch-nav-links open' : 'sch-nav-links'} aria-label="Main navigation">
           {tabs.map(([id, label, Icon]) => <a key={id} href={linkFor(id)} className={activeTab === id ? 'active' : ''} onClick={(event) => select(event, id)} aria-current={activeTab === id ? 'page' : undefined}><Icon size={16} />{label}{id === 'saved' && savedCount > 0 && <b>{savedCount}</b>}</a>)}

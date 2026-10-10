@@ -283,19 +283,19 @@ export default function App() {
   })), [savedItems, currentById]);
 
   return (
-    <div className="min-h-screen flex flex-col transition-colors" style={{ background: 'var(--radar-bg)', color: 'var(--radar-ink)' }}>
+    <div className="min-h-screen flex flex-col transition-colors" style={{ background: 'var(--scanner-bg)', color: 'var(--scanner-ink)' }}>
       <Navbar activeTab={activeTab} onNavigate={navigate} theme={theme} toggleTheme={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} isSyncing={isSyncing || loading} onSyncAll={handleSyncAll} savedCount={savedItems.length} />
       <main className="flex-1">
         {activeTab === 'explorer' && <ExplorerPage opportunities={opportunities} loading={loading} loadError={loadError} sourceCount={reposData.length} savedIds={savedIds} onToggleSave={handleToggleSave} onSelectOpportunity={setSelectedOpportunity} />}
         {activeTab === 'sources' && <SourcesPage opportunities={opportunities} updatedAt={catalog.updatedAt} logs={logs} onFetchRepo={handleFetchRepo} onSyncAll={handleSyncAll} onRetryFailed={handleRetryFailed} onClearLogs={handleClearLogs} isSyncing={isSyncing || loading} lastFetchedRepo={lastFetchedRepo} />}
         {activeTab === 'saved' && <SavedPage savedItems={savedForDisplay} onUpdateStatus={handleUpdateStatus} onRemoveSaved={handleRemoveSaved} onSelectOpportunity={(item) => setSelectedOpportunity(currentById.get(item.id) || { ...item, notes: item.sourceNotes || '' })} onNavigateToExplorer={() => navigate('explorer')} />}
       </main>
-      <footer className="radar-footer">
-        <span>Opportunity Radar · {opportunities.length.toLocaleString()} source leads · {reposData.length} sources</span>
+      <footer className="scanner-footer">
+        <span>Opportunity Scanner · {opportunities.length.toLocaleString()} source leads · {reposData.length} sources</span>
         <span>Made by <a href="https://github.com/mounir19000" target="_blank" rel="noopener noreferrer">Mostefai Mounir</a> with love and vibes.</span>
       </footer>
       {selectedOpportunity && <DetailModal opportunity={selectedOpportunity} isOpen onClose={() => setSelectedOpportunity(null)} isSaved={savedIds.has(selectedOpportunity.id)} savedDetails={savedItems.find((item) => item.id === selectedOpportunity.id)} onToggleSave={handleToggleSave} onUpdateStatus={handleUpdateStatus} />}
-      {toast && <div className="radar-toast" role="status">
+      {toast && <div className="scanner-toast" role="status">
         {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
         {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />}
         {toast.type === 'info' && <Info className="w-4 h-4 shrink-0" />}

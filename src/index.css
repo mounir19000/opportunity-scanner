@@ -3,63 +3,63 @@
 @tailwind utilities;
 
 :root {
-  --radar-bg: #f2f0e9;
-  --radar-surface: #fffdf7;
-  --radar-ink: #17303a;
-  --radar-muted: #64757a;
-  --radar-border: #d8dfdc;
-  --radar-accent: #af5a36;
-  --radar-soft: #f8ebe1;
+  --scanner-bg: #f2f0e9;
+  --scanner-surface: #fffdf7;
+  --scanner-ink: #17303a;
+  --scanner-muted: #64757a;
+  --scanner-border: #d8dfdc;
+  --scanner-accent: #af5a36;
+  --scanner-soft: #f8ebe1;
 }
 .dark {
-  --radar-bg: #0d1b23;
-  --radar-surface: #142630;
-  --radar-ink: #f7f1e8;
-  --radar-muted: #a0b1b5;
-  --radar-border: #29414a;
-  --radar-accent: #f2ae7f;
-  --radar-soft: #263945;
+  --scanner-bg: #0d1b23;
+  --scanner-surface: #142630;
+  --scanner-ink: #f7f1e8;
+  --scanner-muted: #a0b1b5;
+  --scanner-border: #29414a;
+  --scanner-accent: #f2ae7f;
+  --scanner-soft: #263945;
 }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--radar-bg); color: var(--radar-ink); font-family: "DM Sans", system-ui, sans-serif; }
+body { margin: 0; background: var(--scanner-bg); color: var(--scanner-ink); font-family: "DM Sans", system-ui, sans-serif; }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--radar-accent); outline-offset: 3px; }
-.radar-kicker { font-size: 10px; font-weight: 800; letter-spacing: .16em; color: var(--radar-accent); }
-.radar-filters { position: sticky; top: 106px; padding: 24px; border: 1px solid var(--radar-border); background: var(--radar-surface); border-radius: 10px; }
-.radar-filter-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 19px; }
-.radar-filter-head h2 { margin: 3px 0 0; font: 500 29px/1 "Newsreader", Georgia, serif; }
-.radar-reset { display: flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--radar-accent); font-size: 11px; font-weight: 800; }
-.radar-field { display: block; margin: 0 0 15px; }
-.radar-field > span { display: block; margin-bottom: 7px; color: var(--radar-muted); text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: .11em; }
-.radar-field select { width: 100%; height: 39px; border: 1px solid var(--radar-border); border-radius: 5px; background: var(--radar-bg); color: var(--radar-ink); }
-.radar-field select { padding: 0 9px; font-size: 12px; }
-.radar-filter-foot { border-top: 1px solid var(--radar-border); padding-top: 14px; color: var(--radar-muted); font-size: 11px; }
-.radar-result-list { border-top: 1px solid var(--radar-border); }
-.radar-result-card { display: flex; justify-content: space-between; gap: 20px; padding: 23px 23px 20px; border-bottom: 1px solid var(--radar-border); background: var(--radar-surface); }
-.radar-result-card:hover { background: var(--radar-soft); }
-.radar-result-main { min-width: 0; }
-.radar-result-topline { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; margin-bottom: 11px; }
-.radar-type { color: var(--radar-accent); font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
-.radar-source { color: var(--radar-muted); font-size: 10px; }
-.radar-result-title { display: block; max-width: 740px; padding: 0; border: 0; background: none; color: var(--radar-ink); text-align: left; font: 500 23px/1.1 "Newsreader", Georgia, serif; letter-spacing: -.02em; }
-.radar-result-title:hover { color: var(--radar-accent); }
-.radar-result-host { margin: 7px 0 17px; color: var(--radar-muted); font-size: 12px; }
-.radar-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--radar-muted); font-size: 11px; }
-.radar-meta span { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; overflow-wrap: anywhere; }
-.radar-meta svg { flex: 0 0 auto; color: var(--radar-accent); }
-.radar-result-actions { display: flex; flex: 0 0 auto; align-items: start; gap: 10px; }
-.radar-save, .radar-open { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 34px; border: 1px solid var(--radar-border); border-radius: 5px; }
-.radar-save { width: 34px; background: transparent; color: var(--radar-accent); }
-.radar-open { padding: 0 12px; background: var(--radar-ink); color: var(--radar-bg); font-size: 11px; font-weight: 800; }
-.radar-open:hover { opacity: .82; }
+:focus-visible { outline: 2px solid var(--scanner-accent); outline-offset: 3px; }
+.scanner-kicker { font-size: 10px; font-weight: 800; letter-spacing: .16em; color: var(--scanner-accent); }
+.scanner-filters { position: sticky; top: 106px; padding: 24px; border: 1px solid var(--scanner-border); background: var(--scanner-surface); border-radius: 10px; }
+.scanner-filter-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 19px; }
+.scanner-filter-head h2 { margin: 3px 0 0; font: 500 29px/1 "Newsreader", Georgia, serif; }
+.scanner-reset { display: flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--scanner-accent); font-size: 11px; font-weight: 800; }
+.scanner-field { display: block; margin: 0 0 15px; }
+.scanner-field > span { display: block; margin-bottom: 7px; color: var(--scanner-muted); text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: .11em; }
+.scanner-field select { width: 100%; height: 39px; border: 1px solid var(--scanner-border); border-radius: 5px; background: var(--scanner-bg); color: var(--scanner-ink); }
+.scanner-field select { padding: 0 9px; font-size: 12px; }
+.scanner-filter-foot { border-top: 1px solid var(--scanner-border); padding-top: 14px; color: var(--scanner-muted); font-size: 11px; }
+.scanner-result-list { border-top: 1px solid var(--scanner-border); }
+.scanner-result-card { display: flex; justify-content: space-between; gap: 20px; padding: 23px 23px 20px; border-bottom: 1px solid var(--scanner-border); background: var(--scanner-surface); }
+.scanner-result-card:hover { background: var(--scanner-soft); }
+.scanner-result-main { min-width: 0; }
+.scanner-result-topline { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; margin-bottom: 11px; }
+.scanner-type { color: var(--scanner-accent); font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.scanner-source { color: var(--scanner-muted); font-size: 10px; }
+.scanner-result-title { display: block; max-width: 740px; padding: 0; border: 0; background: none; color: var(--scanner-ink); text-align: left; font: 500 23px/1.1 "Newsreader", Georgia, serif; letter-spacing: -.02em; }
+.scanner-result-title:hover { color: var(--scanner-accent); }
+.scanner-result-host { margin: 7px 0 17px; color: var(--scanner-muted); font-size: 12px; }
+.scanner-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--scanner-muted); font-size: 11px; }
+.scanner-meta span { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; overflow-wrap: anywhere; }
+.scanner-meta svg { flex: 0 0 auto; color: var(--scanner-accent); }
+.scanner-result-actions { display: flex; flex: 0 0 auto; align-items: start; gap: 10px; }
+.scanner-save, .scanner-open { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 34px; border: 1px solid var(--scanner-border); border-radius: 5px; }
+.scanner-save { width: 34px; background: transparent; color: var(--scanner-accent); }
+.scanner-open { padding: 0 12px; background: var(--scanner-ink); color: var(--scanner-bg); font-size: 11px; font-weight: 800; }
+.scanner-open:hover { opacity: .82; }
 @media (max-width: 720px) {
-  .radar-filters { position: static; margin-bottom: 28px; }
-  .radar-result-card { padding: 19px 16px; flex-direction: column; }
-  .radar-result-actions { justify-content: space-between; }
+  .scanner-filters { position: static; margin-bottom: 28px; }
+  .scanner-result-card { padding: 19px 16px; flex-direction: column; }
+  .scanner-result-actions { justify-content: space-between; }
 }
-.radar-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; padding: 23px max(40px, calc((100vw - 1400px) / 2)); border-top: 1px solid var(--radar-border); background: var(--radar-bg); color: var(--radar-muted); font-size: 11px; }
-.radar-footer a { color: var(--sch-main); font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
-@media (max-width: 720px) { .radar-footer { flex-direction: column; padding: 22px 20px; } }
+.scanner-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; padding: 23px max(40px, calc((100vw - 1400px) / 2)); border-top: 1px solid var(--scanner-border); background: var(--scanner-bg); color: var(--scanner-muted); font-size: 11px; }
+.scanner-footer a { color: var(--sch-main); font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+@media (max-width: 720px) { .scanner-footer { flex-direction: column; padding: 22px 20px; } }
 
-.radar-toast { position: fixed; z-index: 70; right: 20px; bottom: 20px; display: flex; align-items: center; gap: 9px; max-width: min(420px, calc(100vw - 40px)); padding: 13px 15px; border: 1px solid var(--radar-border); border-radius: 7px; background: var(--radar-surface); color: var(--radar-ink); box-shadow: 0 16px 38px rgba(0,0,0,.18); font-size: 12px; font-weight: 700; }
+.scanner-toast { position: fixed; z-index: 70; right: 20px; bottom: 20px; display: flex; align-items: center; gap: 9px; max-width: min(420px, calc(100vw - 40px)); padding: 13px 15px; border: 1px solid var(--scanner-border); border-radius: 7px; background: var(--scanner-surface); color: var(--scanner-ink); box-shadow: 0 16px 38px rgba(0,0,0,.18); font-size: 12px; font-weight: 700; }

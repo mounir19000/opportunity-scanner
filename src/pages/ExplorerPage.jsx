@@ -111,7 +111,7 @@ export default function ExplorerPage({ opportunities = [], loading = false, load
             </div>
             {loading && !opportunities.length ? <div className="sch-no-results"><h3>Loading opportunities…</h3></div>
               : loadError && !opportunities.length ? <div className="sch-no-results"><h3>Could not load the directory.</h3><p>{loadError}</p><button type="button" onClick={() => window.location.reload()}>Try again</button></div>
-                : visible.length ? <div className="radar-result-list sch-source-list">
+                : visible.length ? <div className="scanner-result-list sch-source-list">
                   {visible.map((item) => <OpportunityCard key={item.id} opportunity={item} isSaved={savedIds.has(item.id)} onToggleSave={onToggleSave} onSelect={onSelectOpportunity} />)}
                 </div>
                   : <div className="sch-no-results"><SearchX size={38} /><h3>No leads match these filters.</h3><p>Try a broader search or clear the filters.</p><button type="button" onClick={reset}>Clear filters</button></div>}
