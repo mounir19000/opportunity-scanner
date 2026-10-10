@@ -1,7 +1,8 @@
-name: Refresh source snapshot
+name: Refresh source snapshot every 3 days
 
 on:
   schedule:
+    # Check daily so the three-day interval continues across month boundaries.
     - cron: '17 6 * * *'
   workflow_dispatch:
 
@@ -13,7 +14,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  cadence:
+    runs-on: ubuntu-latest
+    outputs:
+      run_refresh: ${{ steps.check.outputs.run_refresh }}
+    steps:
+      - id: check
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "run_refresh=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          anchor=$(date -u -d '2026-10-10 00:00:00 UTC' +%s)
+          days_since_anchor=$(( ($(date -u +%s) - anchor) / 86400 ))
+          if (( days_since_anchor >= 3 && days_since_anchor % 3 == 0 )); then
+            echo "run_refresh=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_refresh=false" >> "$GITHUB_OUTPUT"
+          fi
+
   refresh:
+    needs: cadence
+    if: needs.cadence.outputs.run_refresh == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
