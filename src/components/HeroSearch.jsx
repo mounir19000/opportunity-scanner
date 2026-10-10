@@ -8,7 +8,7 @@ export default function HeroSearch({ search, setSearch, total, sourceCount }) {
         <div className="sch-hero-copy">
           <span className="sch-overline"><span className="sch-overline-mark" /> ONE PLACE TO EXPLORE</span>
           <h1>Find your next<br /><em>opportunity.</em></h1>
-          <p>Browse internships, research programmes, and schools collected from {sourceCount} sources. Confirm dates and eligibility on the original listing.</p>
+          <p>Browse internships, research programmes, and schools collected from {sourceCount} sources. Confirm dates on the original listing.</p>
           <div className="sch-search">
             <Search size={21} />
             <input aria-label="Search opportunities" type="search" placeholder="Search roles, hosts, locations..." value={search} onChange={(event) => setSearch(event.target.value)} />

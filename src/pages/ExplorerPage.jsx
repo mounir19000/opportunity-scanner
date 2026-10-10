@@ -92,7 +92,7 @@ export default function ExplorerPage({ opportunities = [], loading = false, load
           <div>
             <span className="sch-overline">THE COMPLETE DIRECTORY</span>
             <h2>Source <em>leads.</em></h2>
-            <p>Listings collected from tracked sources. A listing does not confirm that applications are open or that you are eligible.</p>
+            <p>Listings collected from tracked sources. A listing does not confirm that applications are open.</p>
           </div>
         </div>
         <div className="sch-source-layout">

@@ -99,7 +99,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
     }
 
     const headerLabels = rawCells.map((cell) => cleanText(cell).toLowerCase().replace(/[^a-z0-9 ]/g, '').trim());
-    const knownHeaders = /^(name|company|program|role|position|title|venue|location|city|country|deadline|due|apply by|closes|organizers?|hosts?|university|institute|fee|scholarship|stipend|salary|aid|funding|date|timeline|duration|period|eligibility|level|target|audience|apply|posting|link|url)$/;
+    const knownHeaders = /^(name|company|program|role|position|title|venue|location|city|country|deadline|due|apply by|closes|organizers?|hosts?|university|institute|fee|scholarship|stipend|salary|aid|funding|date|timeline|duration|period|apply|posting|link|url)$/;
     const isHeader = headerLabels.filter((label) => knownHeaders.test(label)).length >= 2
       && headerLabels.some((label) => /^(name|company|program|role|position|title)$/.test(label));
 
@@ -126,9 +126,6 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         if (lower.includes('stipend') || lower.includes('salary') || lower.includes('aid') || lower.includes('scholarship') || lower.includes('funding')) {
           headerIndexMap.stipend = idx;
         }
-        if (lower.includes('eligibility') || lower.includes('level') || lower.includes('target') || lower.includes('audience')) {
-          headerIndexMap.eligibility = idx;
-        }
         if (lower.includes('apply') || lower.includes('posting') || lower.includes('link') || lower.includes('url')) {
           headerIndexMap.url = idx;
         }
@@ -145,7 +142,6 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       const datesCell = headerIndexMap.dates !== undefined ? rawCells[headerIndexMap.dates] : '';
       const stipendCell = headerIndexMap.stipend !== undefined ? rawCells[headerIndexMap.stipend] : '';
       const feeCell = headerIndexMap.fee !== undefined ? rawCells[headerIndexMap.fee] : '';
-      const eligCell = headerIndexMap.eligibility !== undefined ? rawCells[headerIndexMap.eligibility] : '';
       const urlCell = headerIndexMap.url !== undefined ? rawCells[headerIndexMap.url] : '';
 
       const parsedTitle = parseMarkdownLink(titleCell);
@@ -169,7 +165,6 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       const deadline = cleanText(deadlineCell);
       const dates = cleanText(datesCell);
       const stipend = [cleanText(stipendCell), cleanText(feeCell)].map(cleanUnknown).filter(Boolean).join(' · ');
-      const eligibility = cleanText(eligCell);
 
       const repoIdentifier = `${repoInfo.owner}/${repoInfo.name}`;
       const id = `${repoInfo.owner}_${repoInfo.name}_${opportunities.length + 1}_${title.slice(0, 18).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
@@ -184,7 +179,6 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         deadline,
         dates,
         stipend,
-        eligibility,
         notes: `Extracted from ${repoIdentifier} markdown table`,
         url: applyUrl,
         sourceRepo: repoIdentifier,
@@ -241,7 +235,6 @@ export function parseHtmlTable(htmlText, repoInfo) {
       deadline: '',
       dates: '',
       stipend: '',
-      eligibility: '',
       notes: '',
       url: applyLink,
       sourceRepo: repoIdentifier,
@@ -300,7 +293,6 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
       deadline: '',
       dates: '',
       stipend: '',
-      eligibility: '',
       notes: line.replace(/\[([^\]]+)\]\(([^)]+)\)/, '').replace(/^[-*0-9.]+\s*/, '').trim(),
       url: parsed.url,
       sourceRepo: repoIdentifier,

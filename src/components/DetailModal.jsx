@@ -54,13 +54,12 @@ export default function DetailModal({ opportunity, isOpen, onClose, isSaved, sav
         <span className="radar-kicker">{opportunity.type || opportunity.category || 'OPPORTUNITY'} · {repo}</span>
         <h2>{opportunity.title}</h2>
         <p className="radar-dialog-host">{opportunity.host || 'Host unlisted'}</p>
-        <p className="radar-dialog-caveat">This is a source listing. Confirm availability, eligibility, and dates on the original page.</p>
+        <p className="radar-dialog-caveat">This is a source listing. Confirm availability and dates on the original page.</p>
         <dl className="radar-detail-grid">
           {opportunity.deadline && <div><dt>Deadline</dt><dd>{opportunity.deadline}</dd></div>}
           {opportunity.location && <div><dt>Location</dt><dd>{opportunity.location}</dd></div>}
           {opportunity.stipend && <div><dt>Funding / fees</dt><dd>{opportunity.stipend}</dd></div>}
           {opportunity.dates && <div><dt>Program dates</dt><dd>{opportunity.dates}</dd></div>}
-          {opportunity.eligibility && <div><dt>Audience</dt><dd>{opportunity.eligibility}</dd></div>}
           {opportunity.notes && <div><dt>Source notes</dt><dd>{opportunity.notes}</dd></div>}
           <div><dt>Source</dt><dd><a href={sourceUrl} target="_blank" rel="noopener noreferrer">{repo} <ArrowUpRight size={13} /></a></dd></div>
         </dl>

@@ -64,12 +64,14 @@ export function explicitDate(value) {
 
 export function normalizeOpportunity(item) {
   const repo = sourceKey(item.sourceRepo);
+  const normalized = { ...item };
+  delete normalized.eligibility;
   // The school organizer's page is reachable; the list's subdomain has a broken TLS chain.
   const url = /^https?:\/\/(?:www\.)?anais\.naamii\.org\.np\//i.test(item.url || '')
     ? 'https://www.naamii.org/anais'
     : item.url;
   return {
-    ...item,
+    ...normalized,
     id: stableOpportunityId({ ...item, url }),
     sourceRepo: repo,
     url,

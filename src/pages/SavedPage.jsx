@@ -34,7 +34,7 @@ export default function SavedPage({ savedItems = [], onUpdateStatus, onRemoveSav
         eyebrow="YOUR SHORTLIST"
         title="Keep the good"
         accent="ones close."
-        description="Your saved leads and notes stay in this browser. Check the original listing before you submit an application."
+        description="Your leads, statuses, and notes are saved in this browser and return when you reopen the app. Check the original listing before applying."
         metric={savedItems.length.toLocaleString()}
         metricLabel="saved leads"
       />

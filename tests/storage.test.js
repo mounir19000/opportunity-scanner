@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { getSavedItems, getIngestionLogs, saveIngestionLogs, clearIngestionLogs } from '../src/services/storage.js';
+import { SAVED_STORAGE_KEY, getSavedItems, saveItem, updateItemStatus, removeSavedItem, getIngestionLogs, saveIngestionLogs, clearIngestionLogs } from '../src/services/storage.js';
 import { normalizeOpportunity, stableOpportunityId } from '../src/services/opportunityData.js';
 import { getCachedOpportunities, saveCachedOpportunities } from '../src/services/opportunityCache.js';
 
@@ -26,6 +26,29 @@ test('saved legacy IDs migrate to stable source URL IDs', () => {
     assert.equal(saved.status, 'applied');
     assert.equal(saved.notes, 'Follow up');
     assert.equal(JSON.parse(storage.getItem('opportunity_scout_saved'))[0].id, saved.id);
+  } finally {
+    globalThis.localStorage = original;
+  }
+});
+
+test('saved leads, status, and notes are restored from localStorage on return', () => {
+  const original = globalThis.localStorage;
+  const storage = memoryStorage();
+  globalThis.localStorage = storage;
+  try {
+    const lead = { title: 'Research Internship', sourceRepo: 'a/roles', url: 'https://example.org/jobs/2' };
+    const id = stableOpportunityId(lead);
+    saveItem({ ...lead, id }, 'saved', 'Check the deadline');
+    assert.equal(JSON.parse(storage.getItem(SAVED_STORAGE_KEY))[0].id, id);
+    assert.equal(getSavedItems()[0].notes, 'Check the deadline');
+
+    updateItemStatus(id, 'applied', 'Application submitted');
+    const [restored] = getSavedItems();
+    assert.equal(restored.status, 'applied');
+    assert.equal(restored.notes, 'Application submitted');
+
+    removeSavedItem(id);
+    assert.deepEqual(getSavedItems(), []);
   } finally {
     globalThis.localStorage = original;
   }

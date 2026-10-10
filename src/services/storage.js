@@ -1,13 +1,13 @@
 // LocalStorage helper for bookmarks, application statuses, notes, and fetch logs
 import { stableOpportunityId } from './opportunityData.js';
 
-const SAVED_KEY = 'opportunity_scout_saved';
+export const SAVED_STORAGE_KEY = 'opportunity_scout_saved';
 const LEGACY_SAVED_KEY = 'opportunity_scout_saved_legacy';
 const LOGS_KEY = 'opportunity_scout_logs';
 
 export const getSavedItems = () => {
   try {
-    const raw = localStorage.getItem(SAVED_KEY);
+    const raw = localStorage.getItem(SAVED_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return [];
     const legacy = parsed.filter((item) => !item?.url || !item?.sourceRepo);
@@ -31,7 +31,7 @@ export const getSavedItems = () => {
     const current = parsed.filter((item) => item?.url && item?.sourceRepo);
     const migrated = current.map((item) => ({ ...item, id: stableOpportunityId(item) }));
     if (backupSaved && (legacy.length || migrated.some((item, index) => item.id !== current[index].id))) {
-      try { localStorage.setItem(SAVED_KEY, JSON.stringify(migrated)); }
+      try { localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(migrated)); }
       catch { /* The in-memory list remains available for this session. */ }
     }
     return migrated;
@@ -61,7 +61,7 @@ export const saveItem = (opportunity, status = 'saved', notes = '') => {
       updatedList = [updatedItem, ...items];
     }
 
-    localStorage.setItem(SAVED_KEY, JSON.stringify(updatedList));
+    localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(updatedList));
     return updatedList;
   } catch (e) {
     console.error('Failed to save item', e);
@@ -83,7 +83,7 @@ export const updateItemStatus = (id, newStatus, newNotes = null) => {
       }
       return item;
     });
-    localStorage.setItem(SAVED_KEY, JSON.stringify(updatedList));
+    localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(updatedList));
     return updatedList;
   } catch (e) {
     console.error('Failed to update status', e);
@@ -95,7 +95,7 @@ export const removeSavedItem = (id) => {
   try {
     const items = getSavedItems();
     const updatedList = items.filter((item) => item.id !== id);
-    localStorage.setItem(SAVED_KEY, JSON.stringify(updatedList));
+    localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(updatedList));
     return updatedList;
   } catch (e) {
     console.error('Failed to remove item', e);

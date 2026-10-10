@@ -8,6 +8,7 @@ import SavedPage from './pages/SavedPage';
 import reposData from './data/repositories.json';
 import {
   getSavedItems,
+  SAVED_STORAGE_KEY,
   saveItem,
   updateItemStatus,
   removeSavedItem,
@@ -61,6 +62,14 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => { saveIngestionLogs(logs); }, [logs]);
+
+  useEffect(() => {
+    const syncSaved = (event) => {
+      if (event.key === SAVED_STORAGE_KEY || event.key === null) setSavedItems(getSavedItems());
+    };
+    window.addEventListener('storage', syncSaved);
+    return () => window.removeEventListener('storage', syncSaved);
+  }, []);
 
   useEffect(() => {
     const onPop = () => setActiveTab(viewFromUrl());
