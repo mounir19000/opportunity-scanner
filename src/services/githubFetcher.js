@@ -1,6 +1,6 @@
 // Robust Multi-Format GitHub Opportunity Fetcher & Parser
 // Supports: Markdown tables (with/without outer pipes), HTML <table> elements,
-// Markdown bullet lists, Embedded JSON datasets, and multi-branch/file fallbacks.
+// Markdown bullet lists, Embedded JSON datasets, and configured source files.
 
 import { cleanUnknown, dedupeOpportunities, isUsefulOpportunity, normalizeOpportunity } from './opportunityData.js';
 
@@ -256,9 +256,28 @@ export function parseHtmlTable(htmlText, repoInfo) {
 export function parseMarkdownBullets(markdownText, repoInfo) {
   const lines = markdownText.split('\n');
   const opportunities = [];
+  const geographicSections = new Set(['North America', 'Europe', 'Asia', 'Middle East', 'Australia & Oceania', 'Worldwide']);
+  let inGeographicSection = false;
+  let location = '';
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
+    if (repoInfo.locationFromHeadings) {
+      const heading = line.match(/^(#{2,4})\s+(.+)$/);
+      if (heading) {
+        const label = cleanText(heading[2]).replace(/^[^\p{L}]+/u, '');
+        if (heading[1].length === 2) {
+          inGeographicSection = geographicSections.has(label);
+          location = inGeographicSection ? label : '';
+        } else if (heading[1].length === 4 && inGeographicSection) {
+          location = /Global Programs for Indian Students/i.test(label)
+            ? 'Varies by programme'
+            : /Multiple Countries/i.test(label) ? 'Multiple countries' : label;
+        }
+        continue;
+      }
+      if (!inGeographicSection) continue;
+    }
     if (!line.startsWith('-') && !line.startsWith('*') && !/^\d+\./.test(line)) continue;
 
     const parsed = parseMarkdownLink(line);
@@ -277,7 +296,7 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
       host: '',
       category: repoInfo.category || 'General Opportunities',
       type: inferType(parsed.text, repoInfo.category),
-      location: '',
+      location,
       deadline: '',
       dates: '',
       stipend: '',
@@ -292,7 +311,7 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
   return opportunities;
 }
 
-async function fetchReadme(url, headers) {
+async function fetchSourceFile(url, headers) {
   let lastError;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -310,7 +329,7 @@ async function fetchReadme(url, headers) {
       if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 300));
     }
   }
-  throw lastError || new Error('README request failed');
+  throw lastError || new Error('Source file request failed');
 }
 
 // 4. Master Fetch Function for a Repository
@@ -319,7 +338,7 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
   const repoName = repo.name;
   const repoOwner = repo.owner;
   const branches = repo.branch ? [repo.branch] : ['main', 'master', 'dev'];
-  const filenames = ['README.md', 'Readme.md', 'readme.md'];
+  const filenames = repo.file ? [repo.file] : ['README.md', 'Readme.md', 'readme.md'];
 
   const headers = {};
   if (token) {
@@ -335,7 +354,7 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     for (const filename of filenames) {
       const rawUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${filename}`;
       try {
-        const res = await fetchReadme(rawUrl, headers);
+        const res = await fetchSourceFile(rawUrl, headers);
         if (res.ok) {
           content = await res.text();
           successfulUrl = rawUrl;
@@ -369,8 +388,8 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
       durationMs,
       itemsCount: 0,
       parsedCount: 0,
-      error: lastError || 'README not found on configured branches',
-      message: lastError || 'README not found on configured branches',
+      error: lastError || 'Source file not found on configured branches',
+      message: lastError || 'Source file not found on configured branches',
       timestamp: new Date().toISOString(),
     };
     return { opportunities: [], log: logEntry };
@@ -398,10 +417,10 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     durationMs,
     itemsCount: opportunities.length,
     parsedCount: opportunities.length,
-    error: isSuccess ? null : 'Fetched README successfully, but 0 structured tables or listings were parsed',
+    error: isSuccess ? null : 'Fetched source file successfully, but 0 structured tables or listings were parsed',
     message: isSuccess
       ? `Parsed ${opportunities.length} opportunities from ${successfulUrl.split('/').slice(-2).join('/')}`
-      : 'Fetched README successfully, but 0 structured listings were found',
+      : 'Fetched source file successfully, but 0 structured listings were found',
     timestamp: new Date().toISOString(),
   };
 

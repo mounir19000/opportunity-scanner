@@ -20,13 +20,13 @@ export function usableUrl(value, repoKey = '') {
 export function cleanUnknown(value) {
   const text = String(value || '').trim();
   if (!text || /^(n\/?a|tbd|unknown|not available|not specified|not mentioned|not announced|to be annou?nced|few available|yes,? available|see (website|details|program)|check (official|program|site)|actively accepting applications|paid position \(competitive compensation\))/i.test(text)) return '';
-  if (/^(see website \/ rolling|rolling \/ open|global \/ online|remote \/ us \/ global|started\b)/i.test(text)) return '';
+  if (/^(see website \/ rolling|rolling \/ open|global \/ online|remote \/ us \/ global)/i.test(text)) return '';
   return text;
 }
 
 export function explicitDate(value) {
   const text = cleanUnknown(value);
-  if (!text || /(?:not|no|unknown|rolling|check|see|open|ongoing)/i.test(text)) return null;
+  if (!text || /^(?:started)\b|(?:not|no|unknown|rolling|check|see|open|ongoing)/i.test(text)) return null;
   const iso = text.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/);
   if (iso) {
     const date = new Date(Date.UTC(+iso[1], +iso[2] - 1, +iso[3]));
