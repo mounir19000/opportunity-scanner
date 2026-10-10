@@ -23,8 +23,16 @@ Keep sources only when they contain actual internships, schools, or research pro
 
 ## Implemented result
 
-- Reduced the source manifest to four reviewed repositories and refreshed the bundled snapshot on 5 October 2026. The final snapshot has 2,559 deduplicated leads.
+- Reduced the source manifest to three reviewed repositories. The bundled snapshot was refreshed on 5 October 2026, then the SimplifyJobs feed and its 1,818 leads were removed on 10 October 2026. Speedyapply was narrowed to `main/INTERN_INTL.md` on 10 October 2026; the current snapshot has 613 deduplicated leads.
 - Replaced the malformed prebuild script, corrected table header and fee parsing, removed invented open/paid/location values, and preserved the prior snapshot on a failed rebuild.
 - Added one filter engine with exact source and category matching, explicit funding and deadline classification, chronological sorting, and regression tests.
+- Updated the undergraduate research importer to retain the README's country headings as locations. All 75 bundled research leads now have a source-listed location; worldwide groups keep broad labels.
 - Rebuilt the explorer, source directory, tracker, insights, activity view, detail dialog, navigation, and visual styles. Removed the unrelated deploy guide and unused components.
 - Kept source caveats visible throughout the app. The remaining quality limit is the third-party feed itself: a source entry cannot establish that a host is still accepting applications.
+
+## ScholarHub-inspired directory (10 October 2026)
+
+- Added a TypeScript opportunity contract, a curated 14-programme catalogue, a 35/35/30 radar matcher, and a URL-synced filter hook. Explore also displays all 613 current source leads with source-specific filters and pagination; the source archive remains available in the navigation.
+- Rebuilt the Explore view with ScholarHub's warm cream, cobalt, hard-border visual language, a global search, quick filters, a radar profile, desktop sidebar, mobile filter sheet, responsive cards, and a slide-over detail sheet.
+- Added deadline-aware badges, a watchlist, eligibility checklist, required documents, and `.ics` calendar downloads. A specific countdown appears only for a verified official date; unannounced or country-specific rounds show a date caveat and official link.
+- Added tests for URL round trips, facet OR/AND behavior, radar weights, and deadline ordering. The final review should run `npm test` and `npm run build`.
