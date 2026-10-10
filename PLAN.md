@@ -36,3 +36,11 @@ Keep sources only when they contain actual internships, schools, or research pro
 - Rebuilt the Explore view with ScholarHub's warm cream, cobalt, hard-border visual language, a global search, quick filters, a radar profile, desktop sidebar, mobile filter sheet, responsive cards, and a slide-over detail sheet.
 - Added deadline-aware badges, a watchlist, eligibility checklist, required documents, and `.ics` calendar downloads. A specific countdown appears only for a verified official date; unannounced or country-specific rounds show a date caveat and official link.
 - Added tests for URL round trips, facet OR/AND behavior, radar weights, and deadline ordering. The final review should run `npm test` and `npm run build`.
+
+## Source-only directory (10 October 2026)
+
+- Removed the 14 hand-written programme examples, radar matcher, match percentages, and filters that the source snapshot cannot support.
+- Explore now has one source-backed search and filter flow. Source filters and pagination are shareable through URL parameters.
+- Source refreshes persist in the browser; a daily GitHub Actions workflow verifies and updates the deployable JSON snapshot when the source data changes.
+- IDs are based on source and listing URL, so reordering a feed does not move saved status to another lead. Existing saved source IDs migrate automatically; old hand-written programme saves are retained in a local backup key.
+- Insights was folded into Sources, and refresh activity moved under Sources. The snapshot loads separately from the JavaScript bundle.

@@ -1,19 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './scholarhub.css';
-import Navbar from "./components/Navbar";
-import DetailModal from "./components/DetailModal";
-import OpportunityDetailSheet from "./components/OpportunityDetailSheet";
-import ExplorerPage from "./pages/ExplorerPage";
-import AnalyticsPage from "./pages/AnalyticsPage";
-import SourcesPage from "./pages/SourcesPage";
-import LogsPage from "./pages/LogsPage";
-import SavedPage from "./pages/SavedPage";
-
-import initialOpportunitiesData from "./data/initialOpportunities.json";
-import initialLogsData from "./data/initialLogs.json";
-import reposData from "./data/repositories.json";
-import { mockOpportunities } from "./lib/mock-data";
-
+import Navbar from './components/Navbar';
+import DetailModal from './components/DetailModal';
+import ExplorerPage from './pages/ExplorerPage';
+import SourcesPage from './pages/SourcesPage';
+import SavedPage from './pages/SavedPage';
+import reposData from './data/repositories.json';
 import {
   getSavedItems,
   saveItem,
@@ -24,354 +16,276 @@ import {
   clearIngestionLogs,
   getSettings,
   saveSettings,
-} from "./services/storage";
+} from './services/storage';
+import { fetchRepositoryOpportunities } from './services/githubFetcher';
+import { replaceSourceOpportunities, sourceKey } from './services/opportunityData';
+import { getCachedOpportunities, normalizeListings, saveCachedOpportunities } from './services/opportunityCache';
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
-import { fetchRepositoryOpportunities } from "./services/githubFetcher";
-import { replaceSourceOpportunities, sourceKey } from "./services/opportunityData";
-import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+const validViews = new Set(['explorer', 'saved', 'sources']);
+
+function logRepoKey(log) {
+  return log.repo || (log.repoOwner && log.repoName ? log.repoOwner + '/' + log.repoName : '');
+}
+
+function viewFromUrl() {
+  const view = new URLSearchParams(window.location.search).get('view');
+  return validViews.has(view) ? view : 'explorer';
+}
 
 export default function App() {
-  // Theme state (default: dark)
-  const [theme, setTheme] = useState(() => {
-    const saved = getSettings();
-    return saved.theme || "light";
-  });
-
-  // Active navigation tab
-  const [activeTab, setActiveTab] = useState("explorer");
-
-  // Opportunities dataset
-  const [opportunities, setOpportunities] = useState(() => {
-    return Array.isArray(initialOpportunitiesData)
-      ? initialOpportunitiesData
-      : [];
-  });
-
-  // Saved items pipeline
-  const [savedItems, setSavedItems] = useState(() => getSavedItems());
-
-  // Ingestion & fetch logs
-  const [logs, setLogs] = useState(() => {
-    const allowed = new Set((Array.isArray(reposData) ? reposData : reposData.repositories || []).map(sourceKey));
-    const stored = getIngestionLogs().filter((log) => allowed.has(log.repo || (log.repoOwner + "/" + log.repoName)));
-    if (stored.length > 0) return stored;
-    return Array.isArray(initialLogsData) ? initialLogsData : [];
-  });
-
-  // Live Syncing state
+  const [theme, setTheme] = useState(() => getSettings().theme || 'light');
+  const [activeTab, setActiveTab] = useState(viewFromUrl);
+  const [catalog, setCatalog] = useState(() => getCachedOpportunities(reposData) || { items: [], updatedAt: '' });
+  const catalogRef = useRef(catalog);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [savedItems, setSavedItems] = useState(getSavedItems);
+  const allowedRepos = useMemo(() => new Set(reposData.map(sourceKey)), []);
+  const [logs, setLogs] = useState(() => getIngestionLogs().filter((log) => allowedRepos.has(logRepoKey(log))));
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastFetchedRepo, setLastFetchedRepo] = useState(null);
-
-  // Modals state
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
-
-  // Toast notification
   const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
 
-  const showToast = useCallback((message, type = "info") => {
+  const showToast = useCallback((message, type = 'info') => {
+    window.clearTimeout(toastTimer.current);
     setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 4000);
+    toastTimer.current = window.setTimeout(() => setToast(null), 4000);
   }, []);
 
-  // Sync theme with HTML class
+  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
+    root.classList.toggle('dark', theme === 'dark');
     saveSettings({ theme });
   }, [theme]);
 
-  // Persist logs whenever they change
+  useEffect(() => { saveIngestionLogs(logs); }, [logs]);
+
   useEffect(() => {
-    saveIngestionLogs(logs);
-  }, [logs]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
-
-  // Saved IDs set for fast O(1) card lookups
-  const savedIds = useMemo(() => {
-    return new Set(savedItems.map((item) => item.id));
-  }, [savedItems]);
-
-  // Count error logs for navbar badge
-  const errorLogsCount = useMemo(() => {
-    return logs.filter((l) => l.status === "error").length;
-  }, [logs]);
-
-  // Bookmark / Save toggle handler
-  const handleToggleSave = (opportunity, status = "saved", notes = "") => {
-    if (savedIds.has(opportunity.id)) {
-      const updated = removeSavedItem(opportunity.id);
-      setSavedItems(updated);
-      showToast(`Removed "${opportunity.title}" from saved items`, "info");
-    } else {
-      const updated = saveItem(opportunity, status, notes);
-      setSavedItems(updated);
-      showToast(`Saved "${opportunity.title}" to your tracker!`, "success");
-    }
-  };
-
-  // Status / notes update
-  const handleUpdateStatus = (id, newStatus, newNotes = null) => {
-    const updated = updateItemStatus(id, newStatus, newNotes);
-    setSavedItems(updated);
-    showToast(`Updated status to: ${newStatus}`, "success");
-  };
-
-  // Remove single saved item
-  const handleRemoveSaved = (id) => {
-    const updated = removeSavedItem(id);
-    setSavedItems(updated);
-    showToast("Item removed from tracker", "info");
-  };
-
-  // Clear logs handler
-  const handleClearLogs = () => {
-    clearIngestionLogs();
-    setLogs([]);
-    showToast("Logs history cleared", "info");
-  };
-
-  // Extract repositories list
-  const repositoryList = useMemo(() => {
-    return Array.isArray(reposData) ? reposData : reposData.repositories || [];
+    const onPop = () => setActiveTab(viewFromUrl());
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  // Fetch single repository live
-  const handleFetchRepo = async (repoIdentifier) => {
-    setIsSyncing(true);
-    setLastFetchedRepo(repoIdentifier);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(import.meta.env.BASE_URL + 'opportunities.json', { cache: 'no-cache' })
+      .then((response) => {
+        if (!response.ok) throw new Error('Snapshot request failed (' + response.status + ')');
+        return response.json();
+      })
+      .then((snapshot) => {
+        if (cancelled) return;
+        const items = normalizeListings(Array.isArray(snapshot) ? snapshot : snapshot.items, reposData);
+        const generatedAt = Array.isArray(snapshot)
+          ? items.reduce((latest, item) => item.discoveredAt > latest ? item.discoveredAt : latest, '')
+          : snapshot.generatedAt || '';
+        if (!items.length) throw new Error('The opportunity snapshot is empty.');
+        if (generatedAt >= catalogRef.current.updatedAt) {
+          const next = { items, updatedAt: generatedAt };
+          catalogRef.current = next;
+          setCatalog(next);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLoadError(error.message || 'Unable to load opportunities.');
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
-    // Find repo metadata
-    const repoObj = repositoryList.find(
-      (repo) => sourceKey(repo) === repoIdentifier || repo.name === repoIdentifier,
-    );
-    if (!repoObj) {
-      setIsSyncing(false);
-      setLastFetchedRepo(null);
-      showToast("This source is no longer in the curated list.", "error");
+  const navigate = (view) => {
+    if (!validViews.has(view)) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view);
+    window.history.pushState(null, '', url.pathname + url.search + url.hash);
+    setActiveTab(view);
+  };
+
+  const commitListings = (items) => {
+    const next = { items, updatedAt: new Date().toISOString() };
+    catalogRef.current = next;
+    setCatalog(next);
+    saveCachedOpportunities(items, reposData, next.updatedAt);
+  };
+
+  const recordLog = (log) => setLogs((previous) => [log, ...previous].slice(0, 100));
+
+  const refreshSource = async (repo) => {
+    const result = await fetchRepositoryOpportunities(repo);
+    recordLog(result.log);
+    if (result.log.status === 'success') {
+      commitListings(replaceSourceOpportunities(catalogRef.current.items, repo, result.opportunities));
+    }
+    return result;
+  };
+
+  const handleFetchRepo = async (repoIdentifier) => {
+    if (loading) {
+      showToast('The directory is still loading.');
       return;
     }
-
+    const repo = reposData.find((source) => sourceKey(source) === repoIdentifier);
+    if (!repo) {
+      showToast('This source is no longer in the directory.', 'error');
+      return;
+    }
+    setIsSyncing(true);
+    setLastFetchedRepo(repoIdentifier);
     try {
-      const result = await fetchRepositoryOpportunities(repoObj);
-
-      // Prepend new log
-      setLogs((prev) => [
-        result.log,
-        ...prev.filter((l) => (l.repoName || l.repo) !== repoObj.name),
-      ]);
-
-      if (result.opportunities.length > 0) {
-        setOpportunities((prev) => replaceSourceOpportunities(prev, repoObj, result.opportunities));
-        showToast(
-          `Success: Extracted ${result.opportunities.length} opportunities from ${repoObj.name}!`,
-          "success",
-        );
-      } else if (result.log.status === "error") {
-        showToast(
-          `Fetch error for ${repoObj.name}: ${result.log.error}`,
-          "error",
-        );
-      } else {
-        showToast(
-          `Checked ${repoObj.name}: No structured table entries found.`,
-          "info",
-        );
-      }
-    } catch (err) {
-      const errorLog = {
-        id: `log_${Date.now()}`,
-        repoName: repoObj.name,
-        repoOwner: repoObj.owner,
-        url: repoObj.url,
-        status: "error",
-        statusCode: 0,
+      const result = await refreshSource(repo);
+      showToast(result.log.status === 'success'
+        ? 'Refreshed ' + result.opportunities.length + ' leads from ' + repo.name + '.'
+        : 'Could not refresh ' + repo.name + ': ' + (result.log.error || result.log.message),
+      result.log.status === 'success' ? 'success' : 'error');
+    } catch (error) {
+      recordLog({
+        id: 'log_' + Date.now() + '_' + repo.name,
+        repo: sourceKey(repo),
+        repoName: repo.name,
+        repoOwner: repo.owner,
+        status: 'error',
+        error: error.message,
         itemsCount: 0,
-        error: err.message || "Fetch failed",
         timestamp: new Date().toISOString(),
-      };
-      setLogs((prev) => [errorLog, ...prev]);
-      showToast(`Error fetching ${repoObj.name}: ${err.message}`, "error");
+      });
+      showToast('Could not refresh ' + repo.name + ': ' + error.message, 'error');
     } finally {
       setIsSyncing(false);
       setLastFetchedRepo(null);
     }
   };
 
-  // Retry all failed repos
-  const handleRetryFailed = async () => {
-    const failedRepos = logs.filter((l) => l.status === "error");
-    if (failedRepos.length === 0) {
-      showToast("No failed repositories to retry.", "info");
+  const handleSyncAll = async () => {
+    if (loading) {
+      showToast('The directory is still loading.');
       return;
     }
-
     setIsSyncing(true);
-    showToast(`Retrying ${failedRepos.length} failed repositories...`, "info");
-
-    for (const failedLog of failedRepos) {
-      const repoName = failedLog.repo || (failedLog.repoOwner + "/" + failedLog.repoName);
-      await handleFetchRepo(repoName);
-    }
-    setIsSyncing(false);
-  };
-
-  // Sync / Refresh all top priority repos
-  const handleSyncAll = async () => {
-    setIsSyncing(true);
-    showToast(
-      "Refreshing curated source listings...",
-      "info",
-    );
-
-    const sampleRepos = repositoryList;
-    let newItemsCount = 0;
-
-    for (const repo of sampleRepos) {
-      setLastFetchedRepo(repo.owner + "/" + repo.name);
+    let succeeded = 0;
+    let failed = 0;
+    for (const repo of reposData) {
+      setLastFetchedRepo(sourceKey(repo));
       try {
-        const res = await fetchRepositoryOpportunities(repo);
-        setLogs((prev) => [
-          res.log,
-          ...prev.filter((l) => (l.repoName || l.repo) !== repo.name),
-        ]);
-        if (res.opportunities.length > 0) {
-          newItemsCount += res.opportunities.length;
-          setOpportunities((prev) => replaceSourceOpportunities(prev, repo, res.opportunities));
-        }
-      } catch (e) {
-        console.warn("Error during batch sync", e);
+        const result = await refreshSource(repo);
+        if (result.log.status === 'success') succeeded++;
+        else failed++;
+      } catch (error) {
+        failed++;
+        recordLog({
+          id: 'log_' + Date.now() + '_' + repo.name,
+          repo: sourceKey(repo),
+          repoName: repo.name,
+          repoOwner: repo.owner,
+          status: 'error',
+          error: error.message,
+          itemsCount: 0,
+          timestamp: new Date().toISOString(),
+        });
       }
     }
-
     setIsSyncing(false);
     setLastFetchedRepo(null);
-    showToast(
-      `Sync completed! ${newItemsCount} opportunity records processed.`,
-      "success",
-    );
+    showToast('Refreshed ' + succeeded + ' sources' + (failed ? '; ' + failed + ' failed.' : '.'), failed ? 'error' : 'success');
   };
 
+  const handleRetryFailed = async () => {
+    if (loading) {
+      showToast('The directory is still loading.');
+      return;
+    }
+    const latest = new Map();
+    for (const log of logs) {
+      const key = logRepoKey(log);
+      if (!latest.has(key)) latest.set(key, log.status);
+    }
+    const failed = reposData.filter((repo) => latest.get(sourceKey(repo)) === 'error');
+    if (!failed.length) {
+      showToast('No failed sources to retry.');
+      return;
+    }
+    setIsSyncing(true);
+    let succeeded = 0;
+    for (const repo of failed) {
+      setLastFetchedRepo(sourceKey(repo));
+      try {
+        const result = await refreshSource(repo);
+        if (result.log.status === 'success') succeeded++;
+      } catch (error) {
+        recordLog({
+          id: 'log_' + Date.now() + '_' + repo.name,
+          repo: sourceKey(repo),
+          status: 'error',
+          error: error.message,
+          itemsCount: 0,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+    setIsSyncing(false);
+    setLastFetchedRepo(null);
+    showToast('Retried ' + failed.length + ' sources; ' + succeeded + ' refreshed.', succeeded === failed.length ? 'success' : 'error');
+  };
+
+  const handleToggleSave = (opportunity, status = 'saved', notes = '') => {
+    const exists = savedItems.some((item) => item.id === opportunity.id);
+    setSavedItems(exists ? removeSavedItem(opportunity.id) : saveItem(opportunity, status, notes));
+    showToast(exists ? 'Removed from saved items.' : 'Saved to your tracker.', exists ? 'info' : 'success');
+  };
+
+  const handleUpdateStatus = (id, status, notes = null) => {
+    setSavedItems(updateItemStatus(id, status, notes));
+    showToast('Tracker updated.', 'success');
+  };
+
+  const handleRemoveSaved = (id) => {
+    setSavedItems(removeSavedItem(id));
+    showToast('Item removed from tracker.');
+  };
+
+  const handleClearLogs = () => {
+    clearIngestionLogs();
+    setLogs([]);
+    showToast('Refresh history cleared.');
+  };
+
+  const opportunities = catalog.items;
+  const savedIds = useMemo(() => new Set(savedItems.map((item) => item.id)), [savedItems]);
+  const currentById = useMemo(() => new Map(opportunities.map((item) => [item.id, item])), [opportunities]);
+  const savedForDisplay = useMemo(() => savedItems.map((saved) => ({
+    ...saved,
+    ...currentById.get(saved.id),
+    status: saved.status,
+    notes: saved.notes,
+    savedAt: saved.savedAt,
+  })), [savedItems, currentById]);
+
   return (
-    <div className="min-h-screen flex flex-col transition-colors" style={{ background: "var(--radar-bg)", color: "var(--radar-ink)" }}>
-      {/* Navigation Bar */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        theme={theme}
-        toggleTheme={toggleTheme}
-        isSyncing={isSyncing}
-        onSyncAll={handleSyncAll}
-        savedCount={savedItems.length}
-        logsCount={logs.length}
-        errorLogsCount={errorLogsCount}
-        sourcesCount={repositoryList.length}
-      />
-
-      {/* Main Page Routing */}
+    <div className="min-h-screen flex flex-col transition-colors" style={{ background: 'var(--radar-bg)', color: 'var(--radar-ink)' }}>
+      <Navbar activeTab={activeTab} onNavigate={navigate} theme={theme} toggleTheme={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} isSyncing={isSyncing || loading} onSyncAll={handleSyncAll} savedCount={savedItems.length} />
       <main className="flex-1">
-        {activeTab === "explorer" && (
-          <ExplorerPage
-            opportunities={opportunities}
-            savedIds={savedIds}
-            onToggleSave={handleToggleSave}
-            onSelectOpportunity={(opp) => setSelectedOpportunity(opp)}
-          />
-        )}
-
-        {activeTab === "analytics" && (
-          <AnalyticsPage
-            opportunities={opportunities}
-            onSelectOpportunity={(opp) => setSelectedOpportunity(opp)}
-          />
-        )}
-
-        {activeTab === "sources" && (
-          <SourcesPage
-            onFetchRepo={handleFetchRepo}
-            isSyncing={isSyncing}
-            lastFetchedRepo={lastFetchedRepo}
-            opportunities={opportunities}
-          />
-        )}
-
-        {activeTab === "logs" && (
-          <LogsPage
-            logs={logs}
-            onClearLogs={handleClearLogs}
-            onRetryRepo={handleFetchRepo}
-            onRetryFailed={handleRetryFailed}
-            onSyncAll={handleSyncAll}
-            isSyncing={isSyncing}
-          />
-        )}
-
-        {activeTab === "saved" && (
-          <SavedPage
-            savedItems={savedItems}
-            onUpdateStatus={handleUpdateStatus}
-            onRemoveSaved={handleRemoveSaved}
-            onSelectOpportunity={(opp) => setSelectedOpportunity(opp)}
-            onNavigateToExplorer={() => setActiveTab("explorer")}
-          />
-        )}
+        {activeTab === 'explorer' && <ExplorerPage opportunities={opportunities} loading={loading} loadError={loadError} sourceCount={reposData.length} savedIds={savedIds} onToggleSave={handleToggleSave} onSelectOpportunity={setSelectedOpportunity} />}
+        {activeTab === 'sources' && <SourcesPage opportunities={opportunities} updatedAt={catalog.updatedAt} logs={logs} onFetchRepo={handleFetchRepo} onSyncAll={handleSyncAll} onRetryFailed={handleRetryFailed} onClearLogs={handleClearLogs} isSyncing={isSyncing || loading} lastFetchedRepo={lastFetchedRepo} />}
+        {activeTab === 'saved' && <SavedPage savedItems={savedForDisplay} onUpdateStatus={handleUpdateStatus} onRemoveSaved={handleRemoveSaved} onSelectOpportunity={(item) => setSelectedOpportunity(currentById.get(item.id) || { ...item, notes: item.sourceNotes || '' })} onNavigateToExplorer={() => navigate('explorer')} />}
       </main>
-
       <footer className="radar-footer">
-        <span>Opportunity Radar · {mockOpportunities.length} reviewed programmes · {opportunities.length.toLocaleString()} source leads · {repositoryList.length} feeds</span>
-        <span>Review programme details and deadlines on the official page before applying.</span>
+        <span>Opportunity Radar · {opportunities.length.toLocaleString()} source leads · {reposData.length} sources</span>
+        <span>Review programme details and deadlines on the original listing before applying.</span>
       </footer>
-
-      {/* Opportunity Detail Modal */}
-      {selectedOpportunity?.applicationUrl && <OpportunityDetailSheet
-        opportunity={selectedOpportunity}
-        onClose={() => setSelectedOpportunity(null)}
-        isSaved={savedIds.has(selectedOpportunity.id)}
-        onToggleSave={handleToggleSave}
-      />}
-      {selectedOpportunity && !selectedOpportunity.applicationUrl && (
-        <DetailModal
-          opportunity={selectedOpportunity}
-          isOpen={Boolean(selectedOpportunity)}
-          onClose={() => setSelectedOpportunity(null)}
-          isSaved={savedIds.has(selectedOpportunity.id)}
-          savedDetails={savedItems.find((s) => s.id === selectedOpportunity.id)}
-          onToggleSave={handleToggleSave}
-          onUpdateStatus={handleUpdateStatus}
-        />
-      )}
-
-      {/* Floating Toast Notification */}
-      {toast && (
-        <div className="radar-toast">
-          {toast.type === "success" && (
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-          )}
-          {toast.type === "error" && (
-            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-          )}
-          {toast.type === "info" && (
-            <Info className="w-4 h-4 text-brand-500 shrink-0" />
-          )}
-          <span className="text-slate-800 dark:text-slate-200">
-            {toast.message}
-          </span>
-          <button
-            onClick={() => setToast(null)}
-            className="ml-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      {selectedOpportunity && <DetailModal opportunity={selectedOpportunity} isOpen onClose={() => setSelectedOpportunity(null)} isSaved={savedIds.has(selectedOpportunity.id)} savedDetails={savedItems.find((item) => item.id === selectedOpportunity.id)} onToggleSave={handleToggleSave} onUpdateStatus={handleUpdateStatus} />}
+      {toast && <div className="radar-toast" role="status">
+        {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
+        {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />}
+        {toast.type === 'info' && <Info className="w-4 h-4 shrink-0" />}
+        <span>{toast.message}</span>
+        <button type="button" onClick={() => setToast(null)} aria-label="Dismiss notification"><X className="w-3.5 h-3.5" /></button>
+      </div>}
     </div>
   );
 }

@@ -4,6 +4,25 @@ export function sourceKey(source) {
   return source.owner ? `${source.owner}/${source.name}` : source.name || '';
 }
 
+export function canonicalUrl(value) {
+  const url = new URL(value);
+  url.hash = '';
+  for (const key of [...url.searchParams.keys()]) {
+    if (/^(utm_|ref$|source$)/i.test(key)) url.searchParams.delete(key);
+  }
+  url.searchParams.sort();
+  if (url.pathname.length > 1) url.pathname = url.pathname.replace(/\/$/, '');
+  return url.toString();
+}
+
+export function stableOpportunityId(item) {
+  try {
+    return sourceKey(item.sourceRepo) + '|' + canonicalUrl(item.url);
+  } catch {
+    return item.id || '';
+  }
+}
+
 export function usableUrl(value, repoKey = '') {
   try {
     const url = new URL(value);
@@ -43,15 +62,6 @@ export function explicitDate(value) {
   return Number.isNaN(date.getTime()) ? null : new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 }
 
-export function fundingKind(value) {
-  const text = cleanUnknown(value).toLowerCase();
-  if (!text || /(?:not funded|unpaid|self.funded|fee required|competitive compensation|see|check|varies|available for)/.test(text)) return 'unknown';
-  if (/(?:travel (?:grant|support|funding|aid)|airfare|travel covered)/.test(text)) return 'travel';
-  if (/(?:tuition.free|fee waiver|fees? waived|fully funded|free of charge|no fee|\bfree\b)/.test(text)) return 'funded';
-  if (/(?:\bpaid\b|stipend|salary|compensation|per (?:hour|week|month))/.test(text)) return 'paid';
-  return 'unknown';
-}
-
 export function normalizeOpportunity(item) {
   const repo = sourceKey(item.sourceRepo);
   // The school organizer's page is reachable; the list's subdomain has a broken TLS chain.
@@ -60,6 +70,7 @@ export function normalizeOpportunity(item) {
     : item.url;
   return {
     ...item,
+    id: stableOpportunityId({ ...item, url }),
     sourceRepo: repo,
     url,
     deadline: cleanUnknown(item.deadline),
@@ -88,9 +99,7 @@ export function isUsefulOpportunity(item, today = new Date()) {
 export function dedupeOpportunities(items) {
   const seen = new Set();
   return items.filter((item) => {
-    const url = new URL(item.url);
-    for (const key of [...url.searchParams.keys()]) if (/^(utm_|ref$|source$)/i.test(key)) url.searchParams.delete(key);
-    const key = `${url.origin}${url.pathname}${url.search}`.toLowerCase();
+    const key = canonicalUrl(item.url).toLowerCase();
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -100,8 +109,12 @@ export function dedupeOpportunities(items) {
 export function replaceSourceOpportunities(previous, source, fresh) {
   const key = sourceKey(source);
   const oldForSource = previous.filter((item) => sourceKey(item.sourceRepo) === key);
-  const idByUrl = new Map(oldForSource.map((item) => [item.url, item.id]));
+  const firstSeenByUrl = new Map(oldForSource.map((item) => [canonicalUrl(item.url), item.discoveredAt]));
   const retained = previous.filter((item) => sourceKey(item.sourceRepo) !== key);
-  const updated = fresh.map((item) => ({ ...item, id: idByUrl.get(item.url) || item.id }));
+  const updated = fresh.map((item) => ({
+    ...item,
+    id: stableOpportunityId(item),
+    discoveredAt: firstSeenByUrl.get(canonicalUrl(item.url)) || item.discoveredAt,
+  }));
   return dedupeOpportunities([...updated, ...retained]);
 }
