@@ -15,11 +15,11 @@ export default function OpportunityCard({ opportunity, isSaved, onToggleSave, on
         </div>
         <button className="radar-result-title" onClick={() => onSelect(opportunity)} type="button">{opportunity.title}</button>
         <p className="radar-result-host">{opportunity.host || 'Host not listed'}</p>
-        <div className="radar-meta">
-          <span><MapPin size={15} /> {opportunity.location || 'Location unlisted'}</span>
-          <span><CalendarDays size={15} /> {opportunity.deadline || 'Deadline unlisted'}{deadline.kind === 'past' ? ' · Past date' : ''}</span>
-          <span><Wallet size={15} /> {opportunity.stipend ? 'Funding / fees: ' + opportunity.stipend : 'Funding / fees unlisted'}</span>
-        </div>
+        {(opportunity.location || opportunity.deadline || opportunity.stipend) && <div className="radar-meta">
+          {opportunity.location && <span><MapPin size={15} /> {opportunity.location}</span>}
+          {opportunity.deadline && <span><CalendarDays size={15} /> {opportunity.deadline}{deadline.kind === 'past' ? ' · Past date' : ''}</span>}
+          {opportunity.stipend && <span><Wallet size={15} /> Funding / fees: {opportunity.stipend}</span>}
+        </div>}
       </div>
       <div className="radar-result-actions">
         <button onClick={() => onToggleSave(opportunity)} className="radar-save" title={isSaved ? 'Remove saved lead' : 'Save lead'} aria-label={isSaved ? 'Remove saved lead' : 'Save lead'} type="button">
