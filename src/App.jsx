@@ -292,7 +292,7 @@ export default function App() {
       </main>
       <footer className="radar-footer">
         <span>Opportunity Radar · {opportunities.length.toLocaleString()} source leads · {reposData.length} sources</span>
-        <span>Review programme details and deadlines on the original listing before applying.</span>
+        <span>Made by <a href="https://github.com/mounir19000" target="_blank" rel="noopener noreferrer">Mostefai Mounir</a> with love and vibes.</span>
       </footer>
       {selectedOpportunity && <DetailModal opportunity={selectedOpportunity} isOpen onClose={() => setSelectedOpportunity(null)} isSaved={savedIds.has(selectedOpportunity.id)} savedDetails={savedItems.find((item) => item.id === selectedOpportunity.id)} onToggleSave={handleToggleSave} onUpdateStatus={handleUpdateStatus} />}
       {toast && <div className="radar-toast" role="status">
