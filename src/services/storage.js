@@ -1,6 +1,8 @@
 // LocalStorage helper for bookmarks, application statuses, notes, and fetch logs
+import { stableOpportunityId } from './opportunityData.js';
 
 const SAVED_KEY = 'opportunity_scout_saved';
+const LEGACY_SAVED_KEY = 'opportunity_scout_saved_legacy';
 const LOGS_KEY = 'opportunity_scout_logs';
 const SETTINGS_KEY = 'opportunity_scout_settings';
 
@@ -8,7 +10,32 @@ export const getSavedItems = () => {
   try {
     const raw = localStorage.getItem(SAVED_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    const legacy = parsed.filter((item) => !item?.url || !item?.sourceRepo);
+    let backupSaved = true;
+    if (legacy.length) {
+      let previousLegacy = [];
+      try {
+        const stored = JSON.parse(localStorage.getItem(LEGACY_SAVED_KEY) || '[]');
+        if (Array.isArray(stored)) previousLegacy = stored;
+      } catch { /* A malformed backup should not hide current saves. */ }
+      const known = new Set(previousLegacy.map((item) => item.id));
+      try {
+        localStorage.setItem(LEGACY_SAVED_KEY, JSON.stringify([
+          ...previousLegacy,
+          ...legacy.filter((item) => !known.has(item?.id)),
+        ]));
+      } catch {
+        backupSaved = false;
+      }
+    }
+    const current = parsed.filter((item) => item?.url && item?.sourceRepo);
+    const migrated = current.map((item) => ({ ...item, id: stableOpportunityId(item) }));
+    if (backupSaved && (legacy.length || migrated.some((item, index) => item.id !== current[index].id))) {
+      try { localStorage.setItem(SAVED_KEY, JSON.stringify(migrated)); }
+      catch { /* The in-memory list remains available for this session. */ }
+    }
+    return migrated;
   } catch (e) {
     console.error('Failed to load saved items from localStorage', e);
     return [];
@@ -21,6 +48,7 @@ export const saveItem = (opportunity, status = 'saved', notes = '') => {
     const existingIndex = items.findIndex((item) => item.id === opportunity.id);
     const updatedItem = {
       ...opportunity,
+      sourceNotes: opportunity.notes || '',
       savedAt: new Date().toISOString(),
       status, // 'saved', 'applied', 'interviewing', 'offered'
       notes,
@@ -110,7 +138,7 @@ export const getSettings = () => {
     const parsed = raw ? JSON.parse(raw) : {};
     return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { theme: 'light' };
   } catch (e) {
-    return { theme: 'light', githubToken: '' };
+    return { theme: 'light' };
   }
 };
 

@@ -1,6 +1,6 @@
 # Source audit — 10 October 2026
 
-The active manifest is src/data/repositories.json. A source passes the active-feed bar when its canonical GitHub commit feed is reachable, its latest commit is within 180 days, its configured branch and file fetch with HTTP 200, and the parser yields useful, correctly attributed destinations. Internship feeds must predominantly link to individual postings.
+The active manifest is src/data/repositories.json, and the deployable snapshot is public/opportunities.json. A source passes the active-feed bar when its canonical GitHub commit feed is reachable, its latest commit is within 180 days, its configured branch and file fetch with HTTP 200, and the parser yields useful, correctly attributed destinations. Internship feeds must predominantly link to individual postings.
 
 | Retained source | Branch | Latest public commit | Live parsed leads | Review |
 | --- | --- | --- | ---: | --- |
@@ -20,6 +20,6 @@ Verification commands:
     npm test
     npm run build
 
-The source verifier is read-only and fails if any configured repository is stale, unreachable, misconfigured, or produces no usable leads. The prebuild regenerates the snapshot only when every source succeeds. The current bundled snapshot has 613 leads from three sources, including 535 from `main/INTERN_INTL.md`.
+The source verifier is read-only and fails if any configured repository is stale, unreachable, misconfigured, or produces no usable leads. The prebuild regenerates the snapshot only when every source succeeds and the data has changed. The current snapshot has 613 leads from three sources, including 535 from `main/INTERN_INTL.md`. The app loads this JSON separately from its JavaScript bundle. GitHub Actions checks and refreshes the snapshot daily through `.github/workflows/refresh-sources.yml`.
 
 Repository and destination checks establish source quality at the feed level. An international-list entry does not establish citizenship or work-authorization eligibility, and it does not prove that an application remains open. Official program pages and employers are the authority for those details.
