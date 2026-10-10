@@ -4,9 +4,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node --test tests/*.test.js",
+    "verify-sources": "node scripts/verify_sources.js",
+    "curate-snapshot": "node scripts/curate_snapshot.js",
     "prebuild-data": "node scripts/fetch_and_prebuild.js"
   },
   "dependencies": {

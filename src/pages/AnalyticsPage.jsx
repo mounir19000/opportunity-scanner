@@ -1,252 +1,39 @@
 import React, { useMemo } from 'react';
-import {
-  BarChart3,
-  PieChart,
-  Calendar,
-  Globe,
-  Award,
-  DollarSign,
-  GraduationCap,
-  ExternalLink,
-} from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
+import { deadlineState } from '../services/filters';
+import { sourceKey } from '../services/opportunityData';
 
-export default function AnalyticsPage({
-  opportunities = [],
-  onSelectOpportunity,
-}) {
-  // 1. Distribution by Type
-  const typeStats = useMemo(() => {
-    const counts = {};
-    opportunities.forEach((o) => {
-      const t = o.type || 'Other';
-      counts[t] = (counts[t] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
-  }, [opportunities]);
+function distribution(items, key) {
+  const counts = new Map();
+  items.forEach((item) => counts.set(key(item) || 'Unspecified', (counts.get(key(item) || 'Unspecified') || 0) + 1));
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+}
 
-  // 2. Distribution by Category
-  const categoryStats = useMemo(() => {
-    const counts = {};
-    opportunities.forEach((o) => {
-      const c = o.category || 'General';
-      counts[c] = (counts[c] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
-  }, [opportunities]);
-
-  // 3. Location breakdown
-  const locationStats = useMemo(() => {
-    let remote = 0;
-    let us = 0;
-    let europe = 0;
-    let asia = 0;
-    let other = 0;
-
-    opportunities.forEach((o) => {
-      const loc = (o.location || '').toLowerCase();
-      if (loc.includes('remote') || loc.includes('virtual') || loc.includes('online')) {
-        remote++;
-      } else if (loc.includes('usa') || loc.includes('united states') || loc.includes('us')) {
-        us++;
-      } else if (['europe', 'germany', 'uk', 'france', 'italy', 'spain', 'switzerland'].some((k) => loc.includes(k))) {
-        europe++;
-      } else if (['asia', 'japan', 'china', 'singapore', 'korea', 'taiwan', 'india'].some((k) => loc.includes(k))) {
-        asia++;
-      } else {
-        other++;
-      }
-    });
-
-    return [
-      { name: 'Remote / Virtual', count: remote, color: 'bg-indigo-500' },
-      { name: '🇺🇸 United States', count: us, color: 'bg-blue-500' },
-      { name: '🇪🇺 Europe', count: europe, color: 'bg-emerald-500' },
-      { name: 'Asia & Pacific', count: asia, color: 'bg-amber-500' },
-      { name: 'Global / Worldwide', count: other, color: 'bg-slate-500' },
-    ];
-  }, [opportunities]);
-
-  // 4. Upcoming Deadlines Timeline
-  const upcomingList = useMemo(() => {
-    return opportunities
-      .filter((o) => o.deadline && !o.deadline.toLowerCase().includes('passed') && !o.deadline.toLowerCase().includes('closed'))
-      .slice(0, 10);
-  }, [opportunities]);
-
-  const maxTypeCount = typeStats[0]?.count || 1;
-  const maxCatCount = categoryStats[0]?.count || 1;
-
+export default function AnalyticsPage({ opportunities = [], onSelectOpportunity }) {
+  const sourceStats = useMemo(() => distribution(opportunities, (item) => sourceKey(item.sourceRepo)), [opportunities]);
+  const typeStats = useMemo(() => distribution(opportunities, (item) => item.type), [opportunities]);
+  const upcoming = useMemo(() => opportunities.filter((item) => deadlineState(item.deadline).kind === 'upcoming').sort((a, b) => deadlineState(a.deadline).date - deadlineState(b.deadline).date), [opportunities]);
+  const unknown = opportunities.filter((item) => deadlineState(item.deadline).kind === 'unknown').length;
+  const maxSource = sourceStats[0]?.[1] || 1;
+  const maxType = typeStats[0]?.[1] || 1;
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <BarChart3 className="w-6 h-6 text-indigo-500" />
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-            Ecosystem Analytics & Visual Trends
-          </h1>
+    <div className="radar-page radar-inner-page">
+      <div className="radar-inner-hero"><span className="radar-kicker">THE INDEX IN NUMBERS</span><h1>Know the<br /><em>coverage.</em></h1><p>These figures describe the bundled source snapshot. They are not a measure of open applications.</p></div>
+      <div className="radar-inner-content">
+        <div className="radar-insight-strip">
+          <div><strong>{opportunities.length.toLocaleString()}</strong><span>Curated leads</span></div>
+          <div><strong>{sourceStats.length}</strong><span>Sources</span></div>
+          <div><strong>{upcoming.length}</strong><span>Future dated deadlines</span></div>
+          <div><strong>{unknown.toLocaleString()}</strong><span>Deadline unlisted</span></div>
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Synthesized metrics across {opportunities.length.toLocaleString()} global opportunities discovered in the 99 curated repositories.
-        </p>
-      </div>
-
-      {/* Top 3 Visual Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Card 1: Opportunities by Type */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 ">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-brand-500" />
-              <span>Program Types</span>
-            </h3>
-            <span className="text-[11px] text-slate-400">By volume</span>
-          </div>
-
-          <div className="space-y-3">
-            {typeStats.map((item) => {
-              const percentage = Math.round((item.count / opportunities.length) * 100);
-              return (
-                <div key={item.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-medium">
-                    <span className="text-slate-700 dark:text-slate-300">{item.name}</span>
-                    <span className="text-slate-500 dark:text-slate-400 font-mono">
-                      {item.count} ({percentage}%)
-                    </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-brand-500 to-indigo-500"
-                      style={{ width: `${(item.count / maxTypeCount) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="radar-insight-grid">
+          <section className="radar-panel"><span className="radar-kicker">WHERE LEADS COME FROM</span><h2>Sources</h2><div className="radar-bars">{sourceStats.map(([name, count]) => <div className="radar-bar-row" key={name}><div><span>{name}</span><b>{count.toLocaleString()}</b></div><i style={{ width: String((count / maxSource) * 100) + '%' }} /></div>)}</div></section>
+          <section className="radar-panel"><span className="radar-kicker">WHAT THE INDEX COVERS</span><h2>Program types</h2><div className="radar-bars">{typeStats.map(([name, count]) => <div className="radar-bar-row" key={name}><div><span>{name}</span><b>{count.toLocaleString()}</b></div><i style={{ width: String((count / maxType) * 100) + '%' }} /></div>)}</div></section>
         </div>
-
-        {/* Card 2: Location Distribution */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 ">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-              <Globe className="w-4 h-4 text-cyan-500" />
-              <span>Location & Remote Spread</span>
-            </h3>
-            <span className="text-[11px] text-slate-400">Regions</span>
-          </div>
-
-          <div className="space-y-3.5">
-            {locationStats.map((loc) => {
-              const pct = Math.round((loc.count / opportunities.length) * 100);
-              return (
-                <div key={loc.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-medium">
-                    <span className="text-slate-700 dark:text-slate-300">{loc.name}</span>
-                    <span className="text-slate-500 dark:text-slate-400 font-mono">
-                      {loc.count.toLocaleString()} ({pct}%)
-                    </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${loc.color}`}
-                      style={{ width: `${Math.max(pct, 5)}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Card 3: Top Opportunity Categories */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 ">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-500" />
-              <span>Top Focus Areas</span>
-            </h3>
-            <span className="text-[11px] text-slate-400">Categories</span>
-          </div>
-
-          <div className="space-y-2.5">
-            {categoryStats.map((cat) => {
-              return (
-                <div key={cat.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
-                      {cat.name}
-                    </span>
-                    <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                      {cat.count}
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-amber-500/80"
-                      style={{ width: `${(cat.count / maxCatCount) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Upcoming Active Timeline Section */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 ">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-brand-500" />
-              <span>Upcoming High-Priority Deadlines</span>
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Programs currently accepting applications with impending review dates.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {upcomingList.map((opp) => (
-            <div
-              key={opp.id}
-              onClick={() => onSelectOpportunity(opp)}
-              className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition cursor-pointer flex items-center justify-between gap-3 group"
-            >
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300">
-                  {opp.type || 'Program'}
-                </span>
-                <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate mt-1 group-hover:text-brand-500 transition">
-                  {opp.title}
-                </h4>
-                {opp.host && (
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                    {opp.host}
-                  </p>
-                )}
-              </div>
-
-              <div className="text-right shrink-0">
-                <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-900">
-                  {opp.deadline}
-                </span>
-                <div className="text-[10px] text-slate-400 mt-1 font-mono truncate max-w-[120px]">
-                  {opp.sourceRepo}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <section className="radar-panel"><span className="radar-kicker">DATES FOUND IN SOURCE LISTINGS</span><h2>Upcoming deadlines</h2><p className="radar-panel-note">Only explicit future dates appear here. Confirm every deadline on the official program page.</p>
+          {upcoming.length ? <div className="radar-simple-list">{upcoming.slice(0, 12).map((item) => <button key={item.id} onClick={() => onSelectOpportunity(item)} type="button"><span><strong>{item.title}</strong><small>{item.host || sourceKey(item.sourceRepo)}</small></span><span>{item.deadline}<ArrowUpRight size={16} /></span></button>)}</div> : <p className="radar-panel-note">No future dated deadlines are present in this snapshot.</p>}
+        </section>
       </div>
     </div>
   );
 }
-
