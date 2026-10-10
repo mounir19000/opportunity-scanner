@@ -1,476 +1,166 @@
-import React, { useState, useMemo } from "react";
-import StatsOverview from "../components/StatsOverview";
-import FilterBar from "../components/FilterBar";
-import OpportunityCard from "../components/OpportunityCard";
-import OpportunityTable from "../components/OpportunityTable";
-import {
-  SearchX,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
+import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, LayoutGrid, List, SearchX, SlidersHorizontal, Sparkles } from 'lucide-react';
+import HeroRadarSearch from '../components/HeroRadarSearch';
+import FilterSidebar from '../components/FilterSidebar';
+import FilterBar from '../components/FilterBar';
+import RadarOpportunityCard from '../components/RadarOpportunityCard';
+import OpportunityCard from '../components/OpportunityCard';
+import { mockOpportunities } from '../lib/mock-data';
+import { useOpportunityFilter } from '../hooks/useOpportunityFilter';
+import { DEFAULT_FILTERS as SOURCE_DEFAULT_FILTERS, filterOpportunities as filterSourceLeads } from '../services/filters';
+import { sourceKey } from '../services/opportunityData';
 
-const ITEMS_PER_PAGE = 24;
+const PAGE_SIZE = 20;
+const sortLabels = {
+  'deadline-asc': 'Deadline: soonest',
+  'radar-match-desc': 'Highest match',
+  newest: 'Recently added',
+  'title-asc': 'Title A–Z',
+};
 
-export default function ExplorerPage({
-  opportunities = [],
-  savedIds = new Set(),
-  onToggleSave,
-  onSelectOpportunity,
-  sourcesCount = 99,
-}) {
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedFunding, setSelectedFunding] = useState("all");
-  const [selectedDeadlineFilter, setSelectedDeadlineFilter] = useState("all");
-  const [selectedLocation, setSelectedLocation] = useState("all");
-  const [selectedRepo, setSelectedRepo] = useState("all");
-  const [sortBy, setSortBy] = useState("featured");
-  const [viewMode, setViewMode] = useState("grid");
-  const [currentPage, setCurrentPage] = useState(1);
+function pageItems(current, total) {
+  const visible = new Set([1, total]);
+  const start = current <= 3 ? 2 : current >= total - 2 ? Math.max(2, total - 3) : current - 1;
+  const end = current <= 3 ? Math.min(total - 1, 4) : current >= total - 2 ? total - 1 : current + 1;
+  for (let page = start; page <= end; page++) visible.add(page);
+  const sorted = [...visible].sort((a, b) => a - b);
+  return sorted.flatMap((page, index) => {
+    if (index === 0) return [page];
+    const gap = page - sorted[index - 1];
+    return gap === 2 ? [page - 1, page] : gap > 2 ? ['…', page] : [page];
+  });
+}
 
-  // Derived unique lists for filters
-  const allCategories = useMemo(() => {
-    const set = new Set();
-    opportunities.forEach((o) => {
-      if (o.category) set.add(o.category);
-    });
-    return Array.from(set).sort();
-  }, [opportunities]);
+export default function ExplorerPage({ opportunities = [], savedIds = new Set(), onToggleSave, onSelectOpportunity }) {
+  const [profile, setProfile] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('radar_profile') || 'null'); }
+    catch { return null; }
+  });
+  const [view, setView] = useState('grid');
+  const [sourceFilters, setSourceFilters] = useState({ ...SOURCE_DEFAULT_FILTERS });
+  const [sourcePage, setSourcePage] = useState(1);
 
-  const allRepos = useMemo(() => {
-    const set = new Set();
-    opportunities.forEach((o) => {
-      if (o.sourceRepo) set.add(o.sourceRepo);
-      const repoName =
-        typeof o.sourceRepo === "string"
-          ? o.sourceRepo
-          : o.sourceRepo?.name || "";
-      if (repoName) set.add(repoName);
-    });
-    return Array.from(set).sort();
-  }, [opportunities]);
+  useEffect(() => {
+    if (profile) localStorage.setItem('radar_profile', JSON.stringify(profile));
+  }, [profile]);
 
-  // Overall metric counts
-  const paidCount = useMemo(() => {
-    return opportunities.filter(
-      (o) =>
-        o.stipend &&
-        !o.stipend.toLowerCase().includes("fee required") &&
-        !o.stipend.toLowerCase().includes("not available") &&
-        !o.stipend.toLowerCase().includes("na"),
-    ).length;
-  }, [opportunities]);
-
-  const upcomingDeadlinesCount = useMemo(() => {
-    return opportunities.filter(
-      (o) => o.deadline && !o.deadline.toLowerCase().includes("passed"),
-    ).length;
-  }, [opportunities]);
-
-  // Filtering engine
-  const filteredOpportunities = useMemo(() => {
-    return opportunities.filter((item) => {
-      // 1. Text Search
-      if (searchTerm.trim()) {
-        const query = searchTerm.toLowerCase();
-        const matchesTitle = item.title?.toLowerCase().includes(query);
-        const matchesHost = item.host?.toLowerCase().includes(query);
-        const matchesDesc = item.notes?.toLowerCase().includes(query);
-        const matchesLocation = item.location?.toLowerCase().includes(query);
-        const matchesRepo = item.sourceRepo?.toLowerCase().includes(query);
-        if (
-          !matchesTitle &&
-          !matchesHost &&
-          !matchesDesc &&
-          !matchesLocation &&
-          !matchesRepo
-        ) {
-          return false;
-        }
-      }
-
-      // 2. Category
-      if (selectedCategory !== "all") {
-        if (
-          !item.category ||
-          !item.category.toLowerCase().includes(selectedCategory.toLowerCase())
-        ) {
-          return false;
-        }
-      }
-
-      // 3. Type
-      if (selectedType !== "all") {
-        if (
-          !item.type ||
-          !item.type.toLowerCase().includes(selectedType.toLowerCase())
-        ) {
-          return false;
-        }
-      }
-
-      // 4. Funding
-      if (selectedFunding !== "all") {
-        const stipendLower = (item.stipend || "").toLowerCase();
-        if (selectedFunding === "paid") {
-          if (
-            !stipendLower ||
-            stipendLower.includes("not available") ||
-            stipendLower.includes("fee required") ||
-            stipendLower.includes("na")
-          ) {
-            return false;
-          }
-        } else if (selectedFunding === "travel") {
-          if (
-            !stipendLower.includes("travel") &&
-            !stipendLower.includes("grant") &&
-            !stipendLower.includes("aid")
-          ) {
-            return false;
-          }
-        } else if (selectedFunding === "tuition-free") {
-          if (
-            !stipendLower.includes("free") &&
-            !stipendLower.includes("waive") &&
-            !stipendLower.includes("funded")
-          ) {
-            return false;
-          }
-        }
-      }
-
-      // 5. Deadline status
-      if (selectedDeadlineFilter !== "all") {
-        const dl = (item.deadline || "").toLowerCase();
-        if (selectedDeadlineFilter === "upcoming") {
-          if (
-            !dl ||
-            dl.includes("passed") ||
-            dl.includes("closed") ||
-            dl.includes("expired")
-          ) {
-            return false;
-          }
-        } else if (selectedDeadlineFilter === "hasDeadline") {
-          if (
-            !dl ||
-            dl === "n/a" ||
-            dl.includes("tbd") ||
-            dl.includes("check")
-          ) {
-            return false;
-          }
-        } else if (selectedDeadlineFilter === "rolling") {
-          if (
-            !dl.includes("rolling") &&
-            !dl.includes("open") &&
-            !dl.includes("anytime")
-          ) {
-            return false;
-          }
-        }
-      }
-
-      // 6. Location
-      if (selectedLocation !== "all") {
-        const loc = (item.location || "").toLowerCase();
-        if (selectedLocation === "remote") {
-          if (
-            !loc.includes("remote") &&
-            !loc.includes("virtual") &&
-            !loc.includes("online")
-          ) {
-            return false;
-          }
-        } else if (selectedLocation === "us") {
-          if (
-            !loc.includes("usa") &&
-            !loc.includes("united states") &&
-            !loc.includes("us")
-          ) {
-            return false;
-          }
-        } else if (selectedLocation === "europe") {
-          const euKeywords = [
-            "europe",
-            "germany",
-            "uk",
-            "france",
-            "italy",
-            "spain",
-            "switzerland",
-            "netherlands",
-          ];
-          if (!euKeywords.some((k) => loc.includes(k))) return false;
-        } else if (selectedLocation === "asia") {
-          const asiaKeywords = [
-            "asia",
-            "japan",
-            "china",
-            "singapore",
-            "korea",
-            "taiwan",
-            "india",
-          ];
-          if (!asiaKeywords.some((k) => loc.includes(k))) return false;
-        } else if (selectedLocation === "international") {
-          if (
-            !loc.includes("international") &&
-            !loc.includes("worldwide") &&
-            !loc.includes("global")
-          ) {
-            return false;
-          }
-        }
-      }
-
-      // 7. Source Repo
-      if (selectedRepo !== "all") {
-        if (item.sourceRepo !== selectedRepo) return false;
-        const repoName =
-          typeof item.sourceRepo === "string"
-            ? item.sourceRepo
-            : item.sourceRepo?.name || "";
-        if (repoName !== selectedRepo) return false;
-      }
-
-      return true;
-    });
-  }, [
-    opportunities,
-    searchTerm,
-    selectedCategory,
-    selectedType,
-    selectedFunding,
-    selectedDeadlineFilter,
-    selectedLocation,
-    selectedRepo,
-  ]);
-
-  // Sorting
-  const sortedOpportunities = useMemo(() => {
-    const list = [...filteredOpportunities];
-    if (sortBy === "title-asc") {
-      return list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-    }
-    if (sortBy === "host-asc") {
-      return list.sort((a, b) => (a.host || "").localeCompare(b.host || ""));
-    }
-    if (sortBy === "stipend") {
-      return list.sort((a, b) => ((b.stipend || "").length > 5 ? 1 : -1));
-    }
-    if (sortBy === "deadline-asc") {
-      return list.sort((a, b) => {
-        if (!a.deadline) return 1;
-        if (!b.deadline) return -1;
-        return a.deadline.localeCompare(b.deadline);
-      });
-    }
-    if (sortBy === "deadline-desc") {
-      return list.sort((a, b) => {
-        if (!a.deadline) return 1;
-        if (!b.deadline) return -1;
-        return b.deadline.localeCompare(a.deadline);
-      });
-    }
-    return list; // featured
-  }, [filteredOpportunities, sortBy]);
-
-  // Reset page on filter changes
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setSelectedCategory("all");
-    setSelectedType("all");
-    setSelectedFunding("all");
-    setSelectedDeadlineFilter("all");
-    setSelectedLocation("all");
-    setSelectedRepo("all");
-    setSortBy("featured");
-    setCurrentPage(1);
-  };
-
-  // Pagination calculation
-  const totalPages =
-    Math.ceil(sortedOpportunities.length / ITEMS_PER_PAGE) || 1;
-  const validCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
-  const startIndex = (validCurrentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedOpportunities = sortedOpportunities.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
+  const { filters, results, update, clear, searchInput, setSearchInput } = useOpportunityFilter(mockOpportunities, profile);
+  const categories = useMemo(() => [...new Set(opportunities.map((item) => item.category).filter(Boolean))].sort(), [opportunities]);
+  const types = useMemo(() => [...new Set(opportunities.map((item) => item.type).filter(Boolean))].sort(), [opportunities]);
+  const repos = useMemo(() => [...new Set(opportunities.map((item) => sourceKey(item.sourceRepo)).filter(Boolean))].sort(), [opportunities]);
+  const effectiveSourceFilters = useMemo(() => ({
+    ...sourceFilters,
+    search: [filters.searchQuery, sourceFilters.search].filter(Boolean).join(' '),
+  }), [filters.searchQuery, sourceFilters]);
+  const sourceResults = useMemo(
+    () => filterSourceLeads(opportunities, effectiveSourceFilters),
+    [opportunities, effectiveSourceFilters],
   );
 
+  useEffect(() => setSourcePage(1), [filters.searchQuery]);
+  const pages = Math.max(1, Math.ceil(sourceResults.length / PAGE_SIZE));
+  const currentPage = Math.min(sourcePage, pages);
+  const sourcePageItems = pageItems(currentPage, pages);
+  const visibleSources = sourceResults.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const updateSource = (key, value) => {
+    setSourceFilters((previous) => ({ ...previous, [key]: value }));
+    setSourcePage(1);
+  };
+  const resetSource = () => {
+    setSourceFilters({ ...SOURCE_DEFAULT_FILTERS });
+    setSourcePage(1);
+  };
+  const changeSourcePage = (page) => {
+    if (page < 1 || page > pages || page === currentPage) return;
+    setSourcePage(page);
+    document.getElementById('source-results')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Top Hero KPI Bar */}
-      <StatsOverview
-        totalCount={opportunities.length}
-        paidCount={paidCount}
-        upcomingDeadlinesCount={upcomingDeadlinesCount}
-        sourcesCount={sourcesCount}
+    <div className="sch-page">
+      <HeroRadarSearch
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+        filters={filters}
+        update={update}
+        profile={profile}
+        setProfile={setProfile}
+        total={mockOpportunities.length + opportunities.length}
       />
 
-      {/* Filter and Search Bar */}
-      <FilterBar
-        searchTerm={searchTerm}
-        setSearchTerm={(term) => {
-          setSearchTerm(term);
-          setCurrentPage(1);
-        }}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={(cat) => {
-          setSelectedCategory(cat);
-          setCurrentPage(1);
-        }}
-        selectedType={selectedType}
-        setSelectedType={(t) => {
-          setSelectedType(t);
-          setCurrentPage(1);
-        }}
-        selectedFunding={selectedFunding}
-        setSelectedFunding={(f) => {
-          setSelectedFunding(f);
-          setCurrentPage(1);
-        }}
-        selectedDeadlineFilter={selectedDeadlineFilter}
-        setSelectedDeadlineFilter={(d) => {
-          setSelectedDeadlineFilter(d);
-          setCurrentPage(1);
-        }}
-        selectedLocation={selectedLocation}
-        setSelectedLocation={(loc) => {
-          setSelectedLocation(loc);
-          setCurrentPage(1);
-        }}
-        selectedRepo={selectedRepo}
-        setSelectedRepo={(repo) => {
-          setSelectedRepo(repo);
-          setCurrentPage(1);
-        }}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        totalResults={filteredOpportunities.length}
-        allCategories={allCategories}
-        allRepos={allRepos}
-        onResetFilters={handleResetFilters}
-      />
+      <section className="sch-container sch-catalog-summary" id="sch-results" aria-label="Explore listings">
+        <div>
+          <span className="sch-overline">THE COMPLETE DIRECTORY</span>
+          <h2>{(mockOpportunities.length + opportunities.length).toLocaleString()} opportunities to explore</h2>
+          <p>The search above covers both collections. Each collection has filters for the details its listings provide.</p>
+        </div>
+        <div className="sch-catalog-links">
+          <a href="#curated-programmes"><strong>{results.length.toLocaleString()}</strong><span>reviewed programmes</span><ArrowRight size={17} /></a>
+          <a href="#source-leads"><strong>{sourceResults.length.toLocaleString()}</strong><span>source leads</span><ArrowRight size={17} /></a>
+        </div>
+      </section>
 
-      {/* Main Content Area */}
-      {paginatedOpportunities.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 my-6">
-          <SearchX className="w-8 h-8 text-slate-400 mb-3" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">
-            No matching opportunities found
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-4">
-            Try adjusting your search query, selecting "All" categories, or
-            clearing active filters.
-          </p>
-          <button
-            onClick={handleResetFilters}
-            className="px-4 py-2 text-xs font-semibold rounded-xl bg-brand-600 hover:bg-brand-500 text-white transition "
-          >
-            Clear All Filters
-          </button>
-        </div>
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          {paginatedOpportunities.map((opportunity) => (
-            <OpportunityCard
-              key={opportunity.id}
-              opportunity={opportunity}
-              isSaved={savedIds.has(opportunity.id)}
-              onToggleSave={onToggleSave}
-              onSelect={onSelectOpportunity}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="mb-8">
-          <OpportunityTable
-            opportunities={paginatedOpportunities}
-            savedIds={savedIds}
-            onToggleSave={onToggleSave}
-            onSelect={onSelectOpportunity}
-            sortConfig={{ key: sortBy, direction: "asc" }}
-            onSort={(key) => {
-              if (key === "title") setSortBy("title-asc");
-              if (key === "deadline") setSortBy("deadline-asc");
-              if (key === "type") setSortBy("featured");
-            }}
-          />
-        </div>
-      )}
-
-      {/* Pagination Bar */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
-          <div>
-            Showing{" "}
-            <strong className="text-slate-800 dark:text-slate-200">
-              {startIndex + 1}
-            </strong>{" "}
-            to{" "}
-            <strong className="text-slate-800 dark:text-slate-200">
-              {Math.min(
-                startIndex + ITEMS_PER_PAGE,
-                sortedOpportunities.length,
-              )}
-            </strong>{" "}
-            of{" "}
-            <strong className="text-slate-800 dark:text-slate-200">
-              {sortedOpportunities.length}
-            </strong>{" "}
-            opportunities
+      <div className="sch-container sch-directory" id="curated-programmes">
+        <FilterSidebar filters={filters} update={update} clear={clear} opportunities={mockOpportunities} resultsCount={results.length} />
+        <main className="sch-results">
+          <div className="sch-results-header">
+            <div>
+              <span className="sch-overline">REVIEWED PROGRAMMES</span>
+              <h2>Find your <em>opportunity.</em></h2>
+              <p>Showing <strong>{results.length}</strong> of {mockOpportunities.length} reviewed programmes. Check each official page before applying.</p>
+            </div>
+            <div className="sch-results-controls">
+              <label><SlidersHorizontal size={16} /><span>Sort by</span><select aria-label="Sort reviewed programmes" value={filters.sortBy} onChange={(event) => update('sortBy', event.target.value)}>{Object.entries(sortLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+              <div className="sch-view-toggle" aria-label="Display style">
+                <button type="button" className={view === 'grid' ? 'active' : ''} aria-label="Grid view" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid size={17} /></button>
+                <button type="button" className={view === 'list' ? 'active' : ''} aria-label="List view" aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={18} /></button>
+              </div>
+            </div>
           </div>
+          {profile?.targetDegree && profile?.primaryField && profile?.citizenship && <div className="sch-match-note"><Sparkles size={16} /> Match scores use your radar profile. Check each programme’s full eligibility before applying.</div>}
+          {results.length ? (
+            <div className={`sch-card-grid ${view === 'list' ? 'list' : ''}`}>
+              {results.map((item) => <RadarOpportunityCard key={item.id} opportunity={item} profile={profile} isSaved={savedIds.has(item.id)} onToggleSave={onToggleSave} onSelect={onSelectOpportunity} view={view} />)}
+            </div>
+          ) : (
+            <div className="sch-no-results"><SearchX size={38} /><h3>No reviewed programmes match these filters.</h3><p>Try resetting the funding filter or clearing the location restriction.</p><button type="button" onClick={clear}>Clear reviewed filters</button></div>
+          )}
+          <div className="sch-directory-foot"><span>Reviewed examples · checked 10 October 2026</span><span>Official pages are the authority on dates and eligibility.</span></div>
+        </main>
+      </div>
 
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={validCurrentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
-              title="First Page"
-            >
-              <ChevronsLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={validCurrentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
-              title="Previous Page"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <span className="px-3 py-1 font-semibold text-slate-800 dark:text-slate-200">
-              Page {validCurrentPage} of {totalPages}
-            </span>
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={validCurrentPage === totalPages}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
-              title="Next Page"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={validCurrentPage === totalPages}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
-              title="Last Page"
-            >
-              <ChevronsRight className="w-4 h-4" />
-            </button>
+      <section className="sch-container sch-source-section" id="source-leads" aria-label="Source leads">
+        <div className="sch-source-heading">
+          <div><span className="sch-overline">MORE TO EXPLORE</span><h2>Source <em>leads.</em></h2><p>Browse {opportunities.length.toLocaleString()} listings from tracked feeds. Dates, funding and eligibility appear only when a source provides them.</p></div>
+          <a href="#sch-results">Back to directory overview ↑</a>
+        </div>
+        <div className="sch-source-layout">
+          <FilterBar filters={sourceFilters} onChange={updateSource} onReset={resetSource} categories={categories} types={types} repos={repos} totalResults={sourceResults.length} />
+          <div className="sch-source-results" id="source-results">
+            <div className="sch-source-toolbar">
+              <div><strong>{sourceResults.length.toLocaleString()} matching leads</strong><span>{sourceFilters.sort === 'details-desc' ? 'More published details first. Check the original listing before applying.' : 'Check the original listing before applying.'}</span></div>
+              <label>Sort by <select value={sourceFilters.sort} onChange={(event) => updateSource('sort', event.target.value)}><option value="details-desc">Most details first</option><option value="featured">Source order</option><option value="deadline-asc">Nearest deadline</option><option value="deadline-desc">Latest deadline</option><option value="title">Title A–Z</option><option value="host">Host A–Z</option></select></label>
+            </div>
+            {visibleSources.length ? (
+              <div className="radar-result-list sch-source-list">
+                {visibleSources.map((item) => <OpportunityCard key={item.id} opportunity={item} isSaved={savedIds.has(item.id)} onToggleSave={onToggleSave} onSelect={onSelectOpportunity} />)}
+              </div>
+            ) : (
+              <div className="sch-no-results"><SearchX size={38} /><h3>No source leads match these filters.</h3><p>Try a broader search or clear the source filters.</p><button type="button" onClick={resetSource}>Clear source filters</button></div>
+            )}
+            {pages > 1 && <div className="sch-source-pagination">
+              <span>Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, sourceResults.length)} of {sourceResults.length.toLocaleString()} · Page {currentPage} of {pages}</span>
+              <nav aria-label="Source lead pages">
+                <button type="button" onClick={() => changeSourcePage(currentPage - 1)} disabled={currentPage === 1} aria-label="Previous source page"><ArrowLeft size={17} /></button>
+                {sourcePageItems.map((page, index) => page === '…'
+                  ? <span className="sch-page-ellipsis" key={`gap-${index}`} aria-hidden="true">…</span>
+                  : <button type="button" key={page} className={page === currentPage ? 'active' : ''} aria-label={`Go to source page ${page}`} aria-current={page === currentPage ? 'page' : undefined} onClick={() => changeSourcePage(page)}>{page}</button>)}
+                <button type="button" onClick={() => changeSourcePage(currentPage + 1)} disabled={currentPage === pages} aria-label="Next source page"><ArrowRight size={17} /></button>
+              </nav>
+            </div>}
           </div>
         </div>
-      )}
+      </section>
     </div>
   );
 }

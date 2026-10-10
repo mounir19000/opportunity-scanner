@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import './scholarhub.css';
 import Navbar from "./components/Navbar";
 import DetailModal from "./components/DetailModal";
-import DeploymentModal from "./components/DeploymentModal";
+import OpportunityDetailSheet from "./components/OpportunityDetailSheet";
 import ExplorerPage from "./pages/ExplorerPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import SourcesPage from "./pages/SourcesPage";
@@ -11,6 +12,7 @@ import SavedPage from "./pages/SavedPage";
 import initialOpportunitiesData from "./data/initialOpportunities.json";
 import initialLogsData from "./data/initialLogs.json";
 import reposData from "./data/repositories.json";
+import { mockOpportunities } from "./lib/mock-data";
 
 import {
   getSavedItems,
@@ -25,13 +27,14 @@ import {
 } from "./services/storage";
 
 import { fetchRepositoryOpportunities } from "./services/githubFetcher";
-import { CheckCircle2, AlertCircle, Info, Sparkles, X } from "lucide-react";
+import { replaceSourceOpportunities, sourceKey } from "./services/opportunityData";
+import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 
 export default function App() {
   // Theme state (default: dark)
   const [theme, setTheme] = useState(() => {
     const saved = getSettings();
-    return saved.theme || "dark";
+    return saved.theme || "light";
   });
 
   // Active navigation tab
@@ -49,8 +52,9 @@ export default function App() {
 
   // Ingestion & fetch logs
   const [logs, setLogs] = useState(() => {
-    const stored = getIngestionLogs();
-    if (stored && stored.length > 0) return stored;
+    const allowed = new Set((Array.isArray(reposData) ? reposData : reposData.repositories || []).map(sourceKey));
+    const stored = getIngestionLogs().filter((log) => allowed.has(log.repo || (log.repoOwner + "/" + log.repoName)));
+    if (stored.length > 0) return stored;
     return Array.isArray(initialLogsData) ? initialLogsData : [];
   });
 
@@ -60,7 +64,6 @@ export default function App() {
 
   // Modals state
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
-  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
   // Toast notification
   const [toast, setToast] = useState(null);
@@ -148,25 +151,17 @@ export default function App() {
 
     // Find repo metadata
     const repoObj = repositoryList.find(
-      (r) =>
-        r.name === repoIdentifier ||
-        `${r.owner}/${r.name}` === repoIdentifier ||
-        r.url?.includes(repoIdentifier),
-    ) || {
-      name: repoIdentifier.includes("/")
-        ? repoIdentifier.split("/")[1]
-        : repoIdentifier,
-      owner: repoIdentifier.includes("/")
-        ? repoIdentifier.split("/")[0]
-        : "unknown",
-      url: `https://github.com/${repoIdentifier}`,
-      category: "General",
-    };
+      (repo) => sourceKey(repo) === repoIdentifier || repo.name === repoIdentifier,
+    );
+    if (!repoObj) {
+      setIsSyncing(false);
+      setLastFetchedRepo(null);
+      showToast("This source is no longer in the curated list.", "error");
+      return;
+    }
 
     try {
-      const token =
-        localStorage.getItem("opportunity_scout_github_token") || "";
-      const result = await fetchRepositoryOpportunities(repoObj, token);
+      const result = await fetchRepositoryOpportunities(repoObj);
 
       // Prepend new log
       setLogs((prev) => [
@@ -175,14 +170,7 @@ export default function App() {
       ]);
 
       if (result.opportunities.length > 0) {
-        // Merge unique opportunities
-        setOpportunities((prev) => {
-          const existingIds = new Set(prev.map((o) => o.id));
-          const newOpps = result.opportunities.filter(
-            (o) => !existingIds.has(o.id),
-          );
-          return [...newOpps, ...prev];
-        });
+        setOpportunities((prev) => replaceSourceOpportunities(prev, repoObj, result.opportunities));
         showToast(
           `Success: Extracted ${result.opportunities.length} opportunities from ${repoObj.name}!`,
           "success",
@@ -230,7 +218,7 @@ export default function App() {
     showToast(`Retrying ${failedRepos.length} failed repositories...`, "info");
 
     for (const failedLog of failedRepos) {
-      const repoName = failedLog.repoName || failedLog.repo;
+      const repoName = failedLog.repo || (failedLog.repoOwner + "/" + failedLog.repoName);
       await handleFetchRepo(repoName);
     }
     setIsSyncing(false);
@@ -240,32 +228,24 @@ export default function App() {
   const handleSyncAll = async () => {
     setIsSyncing(true);
     showToast(
-      "Starting live sync across open-source opportunity repositories...",
+      "Refreshing curated source listings...",
       "info",
     );
 
-    const sampleRepos = repositoryList.slice(0, 15); // Sync top 15 sources in browser session
+    const sampleRepos = repositoryList;
     let newItemsCount = 0;
 
     for (const repo of sampleRepos) {
-      setLastFetchedRepo(repo.name);
+      setLastFetchedRepo(repo.owner + "/" + repo.name);
       try {
-        const token =
-          localStorage.getItem("opportunity_scout_github_token") || "";
-        const res = await fetchRepositoryOpportunities(repo, token);
+        const res = await fetchRepositoryOpportunities(repo);
         setLogs((prev) => [
           res.log,
           ...prev.filter((l) => (l.repoName || l.repo) !== repo.name),
         ]);
         if (res.opportunities.length > 0) {
           newItemsCount += res.opportunities.length;
-          setOpportunities((prev) => {
-            const existingIds = new Set(prev.map((o) => o.id));
-            const newOpps = res.opportunities.filter(
-              (o) => !existingIds.has(o.id),
-            );
-            return [...newOpps, ...prev];
-          });
+          setOpportunities((prev) => replaceSourceOpportunities(prev, repo, res.opportunities));
         }
       } catch (e) {
         console.warn("Error during batch sync", e);
@@ -281,7 +261,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors selection:bg-brand-500 selection:text-white">
+    <div className="min-h-screen flex flex-col transition-colors" style={{ background: "var(--radar-bg)", color: "var(--radar-ink)" }}>
       {/* Navigation Bar */}
       <Navbar
         activeTab={activeTab}
@@ -290,10 +270,10 @@ export default function App() {
         toggleTheme={toggleTheme}
         isSyncing={isSyncing}
         onSyncAll={handleSyncAll}
-        onOpenDeployModal={() => setIsDeployModalOpen(true)}
         savedCount={savedItems.length}
         logsCount={logs.length}
         errorLogsCount={errorLogsCount}
+        sourcesCount={repositoryList.length}
       />
 
       {/* Main Page Routing */}
@@ -304,7 +284,6 @@ export default function App() {
             savedIds={savedIds}
             onToggleSave={handleToggleSave}
             onSelectOpportunity={(opp) => setSelectedOpportunity(opp)}
-            sourcesCount={repositoryList.length}
           />
         )}
 
@@ -320,6 +299,7 @@ export default function App() {
             onFetchRepo={handleFetchRepo}
             isSyncing={isSyncing}
             lastFetchedRepo={lastFetchedRepo}
+            opportunities={opportunities}
           />
         )}
 
@@ -345,36 +325,19 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-xs text-slate-500 dark:text-slate-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-800 dark:text-slate-200">
-              OpportunityRadar
-            </span>
-            <span>•</span>
-            <span>Aggregating 99+ GitHub trackers</span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsDeployModalOpen(true)}
-              className="hover:text-brand-500 transition underline underline-offset-4"
-            >
-              Host on Netlify / Vercel
-            </button>
-            <button
-              onClick={() => setActiveTab("logs")}
-              className="hover:text-brand-500 transition"
-            >
-              Diagnostic Logs ({errorLogsCount} errors)
-            </button>
-          </div>
-        </div>
+      <footer className="radar-footer">
+        <span>Opportunity Radar · {mockOpportunities.length} reviewed programmes · {opportunities.length.toLocaleString()} source leads · {repositoryList.length} feeds</span>
+        <span>Review programme details and deadlines on the official page before applying.</span>
       </footer>
 
       {/* Opportunity Detail Modal */}
-      {selectedOpportunity && (
+      {selectedOpportunity?.applicationUrl && <OpportunityDetailSheet
+        opportunity={selectedOpportunity}
+        onClose={() => setSelectedOpportunity(null)}
+        isSaved={savedIds.has(selectedOpportunity.id)}
+        onToggleSave={handleToggleSave}
+      />}
+      {selectedOpportunity && !selectedOpportunity.applicationUrl && (
         <DetailModal
           opportunity={selectedOpportunity}
           isOpen={Boolean(selectedOpportunity)}
@@ -386,15 +349,9 @@ export default function App() {
         />
       )}
 
-      {/* Netlify / Vercel Deployment Modal */}
-      <DeploymentModal
-        isOpen={isDeployModalOpen}
-        onClose={() => setIsDeployModalOpen(false)}
-      />
-
       {/* Floating Toast Notification */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl border  bg-white dark:bg-slate-900 text-xs font-semibold  slide-in-from-bottom-3 duration-200 border-slate-200 dark:border-slate-800">
+        <div className="radar-toast">
           {toast.type === "success" && (
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
           )}

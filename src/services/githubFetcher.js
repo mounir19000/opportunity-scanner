@@ -1,6 +1,8 @@
 // Robust Multi-Format GitHub Opportunity Fetcher & Parser
 // Supports: Markdown tables (with/without outer pipes), HTML <table> elements,
-// Markdown bullet lists, Embedded JSON datasets, and multi-branch/file fallbacks.
+// Markdown bullet lists, Embedded JSON datasets, and configured source files.
+
+import { cleanUnknown, dedupeOpportunities, isUsefulOpportunity, normalizeOpportunity } from './opportunityData.js';
 
 export function cleanText(str) {
   if (!str) return '';
@@ -72,7 +74,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
   const opportunities = [];
   let inTable = false;
   let headerIndexMap = null;
-  let lastHost = repoInfo.owner;
+  let lastHost = '';
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i].trim();
@@ -96,29 +98,16 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       continue;
     }
 
-    const isHeader = rawCells.some((c) => {
-      const lower = c.toLowerCase();
-      return (
-        lower.includes('name') ||
-        lower.includes('company') ||
-        lower.includes('program') ||
-        lower.includes('role') ||
-        lower.includes('title') ||
-        lower.includes('venue') ||
-        lower.includes('location') ||
-        lower.includes('deadline') ||
-        lower.includes('organizer') ||
-        lower.includes('fee') ||
-        lower.includes('scholarship') ||
-        lower.includes('stipend')
-      );
-    });
+    const headerLabels = rawCells.map((cell) => cleanText(cell).toLowerCase().replace(/[^a-z0-9 ]/g, '').trim());
+    const knownHeaders = /^(name|company|program|role|position|title|venue|location|city|country|deadline|due|apply by|closes|organizers?|hosts?|university|institute|fee|scholarship|stipend|salary|aid|funding|date|timeline|duration|period|eligibility|level|target|audience|apply|posting|link|url)$/;
+    const isHeader = headerLabels.filter((label) => knownHeaders.test(label)).length >= 2
+      && headerLabels.some((label) => /^(name|company|program|role|position|title)$/.test(label));
 
     if (isHeader) {
       headerIndexMap = {};
       rawCells.forEach((c, idx) => {
-        const lower = c.toLowerCase();
-        if (lower.includes('name') || lower.includes('program') || lower.includes('title') || lower.includes('role')) {
+        const lower = headerLabels[idx];
+        if (lower.includes('name') || lower.includes('program') || lower.includes('title') || lower.includes('role') || lower.includes('position')) {
           if (headerIndexMap.title === undefined) headerIndexMap.title = idx;
         }
         if (lower.includes('company') || lower.includes('organizer') || lower.includes('host') || lower.includes('university') || lower.includes('institute')) {
@@ -133,13 +122,14 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         if (lower.includes('date') || lower.includes('timeline') || lower.includes('duration') || lower.includes('period')) {
           headerIndexMap.dates = idx;
         }
-        if (lower.includes('fee') || lower.includes('stipend') || lower.includes('salary') || lower.includes('aid') || lower.includes('scholarship') || lower.includes('funding')) {
+        if (lower === 'fee') headerIndexMap.fee = idx;
+        if (lower.includes('stipend') || lower.includes('salary') || lower.includes('aid') || lower.includes('scholarship') || lower.includes('funding')) {
           headerIndexMap.stipend = idx;
         }
         if (lower.includes('eligibility') || lower.includes('level') || lower.includes('target') || lower.includes('audience')) {
           headerIndexMap.eligibility = idx;
         }
-        if (lower.includes('apply') || lower.includes('link') || lower.includes('url')) {
+        if (lower.includes('apply') || lower.includes('posting') || lower.includes('link') || lower.includes('url')) {
           headerIndexMap.url = idx;
         }
       });
@@ -154,6 +144,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       const deadlineCell = headerIndexMap.deadline !== undefined ? rawCells[headerIndexMap.deadline] : '';
       const datesCell = headerIndexMap.dates !== undefined ? rawCells[headerIndexMap.dates] : '';
       const stipendCell = headerIndexMap.stipend !== undefined ? rawCells[headerIndexMap.stipend] : '';
+      const feeCell = headerIndexMap.fee !== undefined ? rawCells[headerIndexMap.fee] : '';
       const eligCell = headerIndexMap.eligibility !== undefined ? rawCells[headerIndexMap.eligibility] : '';
       const urlCell = headerIndexMap.url !== undefined ? rawCells[headerIndexMap.url] : '';
 
@@ -173,12 +164,12 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         lastHost = host;
       }
 
-      const applyUrl = parsedTitle.url || parsedUrl.url || (urlCell.startsWith('http') ? urlCell : repoInfo.url);
-      const location = cleanText(locCell) || 'Global / Online';
-      const deadline = cleanText(deadlineCell) || 'Rolling / Open';
+      const applyUrl = parsedUrl.url || (urlCell.startsWith('http') ? urlCell : '') || parsedTitle.url;
+      const location = cleanText(locCell);
+      const deadline = cleanText(deadlineCell);
       const dates = cleanText(datesCell);
-      const stipend = cleanText(stipendCell) || 'See program details';
-      const eligibility = cleanText(eligCell) || repoInfo.target_audience || 'All eligible students & researchers';
+      const stipend = [cleanText(stipendCell), cleanText(feeCell)].map(cleanUnknown).filter(Boolean).join(' · ');
+      const eligibility = cleanText(eligCell);
 
       const repoIdentifier = `${repoInfo.owner}/${repoInfo.name}`;
       const id = `${repoInfo.owner}_${repoInfo.name}_${opportunities.length + 1}_${title.slice(0, 18).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
@@ -186,7 +177,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       opportunities.push({
         id,
         title,
-        host: host || repoInfo.owner,
+        host: host || '',
         category: repoInfo.category || 'General',
         type: inferType(title, repoInfo.category),
         location,
@@ -225,8 +216,8 @@ export function parseHtmlTable(htmlText, repoInfo) {
 
     let company = cells[0];
     let role = cells[1];
-    let location = cells[2] || 'Remote / US / Global';
-    let applyLink = links.find((l) => l.includes('http') && !l.includes('simplify.jobs/c/')) || links[0] || repoInfo.url;
+    let location = cells[2] || '';
+    let applyLink = links.find((l) => l.startsWith('http') && !l.includes('simplify.jobs/c/')) || links.find((l) => l.startsWith('http')) || '';
 
     if (!role || role.length < 2) continue;
 
@@ -247,11 +238,11 @@ export function parseHtmlTable(htmlText, repoInfo) {
       category: repoInfo.category || 'Tech & Software Engineering Internships',
       type: inferType(role, repoInfo.category),
       location,
-      deadline: 'Actively accepting applications',
-      dates: 'Summer 2026/2027',
-      stipend: 'Paid position (Competitive compensation)',
-      eligibility: repoInfo.target_audience || 'Undergrad & Grad Students',
-      notes: `Extracted from ${repoIdentifier} active listings`,
+      deadline: '',
+      dates: '',
+      stipend: '',
+      eligibility: '',
+      notes: '',
       url: applyLink,
       sourceRepo: repoIdentifier,
       discoveredAt: new Date().toISOString(),
@@ -265,9 +256,28 @@ export function parseHtmlTable(htmlText, repoInfo) {
 export function parseMarkdownBullets(markdownText, repoInfo) {
   const lines = markdownText.split('\n');
   const opportunities = [];
+  const geographicSections = new Set(['North America', 'Europe', 'Asia', 'Middle East', 'Australia & Oceania', 'Worldwide']);
+  let inGeographicSection = false;
+  let location = '';
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
+    if (repoInfo.locationFromHeadings) {
+      const heading = line.match(/^(#{2,4})\s+(.+)$/);
+      if (heading) {
+        const label = cleanText(heading[2]).replace(/^[^\p{L}]+/u, '');
+        if (heading[1].length === 2) {
+          inGeographicSection = geographicSections.has(label);
+          location = inGeographicSection ? label : '';
+        } else if (heading[1].length === 4 && inGeographicSection) {
+          location = /Global Programs for Indian Students/i.test(label)
+            ? 'Varies by programme'
+            : /Multiple Countries/i.test(label) ? 'Multiple countries' : label;
+        }
+        continue;
+      }
+      if (!inGeographicSection) continue;
+    }
     if (!line.startsWith('-') && !line.startsWith('*') && !/^\d+\./.test(line)) continue;
 
     const parsed = parseMarkdownLink(line);
@@ -283,14 +293,14 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
     opportunities.push({
       id,
       title: parsed.text,
-      host: repoInfo.owner,
+      host: '',
       category: repoInfo.category || 'General Opportunities',
       type: inferType(parsed.text, repoInfo.category),
-      location: 'Check program website',
-      deadline: 'See website / Rolling',
+      location,
+      deadline: '',
       dates: '',
-      stipend: 'Check official announcement',
-      eligibility: repoInfo.target_audience || 'Students & Researchers',
+      stipend: '',
+      eligibility: '',
       notes: line.replace(/\[([^\]]+)\]\(([^)]+)\)/, '').replace(/^[-*0-9.]+\s*/, '').trim(),
       url: parsed.url,
       sourceRepo: repoIdentifier,
@@ -301,13 +311,34 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
   return opportunities;
 }
 
+async function fetchSourceFile(url, headers) {
+  let lastError;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+        ? AbortSignal.timeout(10000)
+        : undefined;
+      const response = await fetch(url, { headers, signal });
+      if ((response.status === 429 || response.status >= 500) && attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        continue;
+      }
+      return response;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  }
+  throw lastError || new Error('Source file request failed');
+}
+
 // 4. Master Fetch Function for a Repository
 export async function fetchRepositoryOpportunities(repo, token = '') {
   const startTime = Date.now();
   const repoName = repo.name;
   const repoOwner = repo.owner;
-  const branches = ['main', 'master', 'dev'];
-  const filenames = ['README.md', 'Readme.md', 'readme.md'];
+  const branches = repo.branch ? [repo.branch] : ['main', 'master', 'dev'];
+  const filenames = repo.file ? [repo.file] : ['README.md', 'Readme.md', 'readme.md'];
 
   const headers = {};
   if (token) {
@@ -323,7 +354,7 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     for (const filename of filenames) {
       const rawUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${branch}/${filename}`;
       try {
-        const res = await fetch(rawUrl, { headers });
+        const res = await fetchSourceFile(rawUrl, headers);
         if (res.ok) {
           content = await res.text();
           successfulUrl = rawUrl;
@@ -357,8 +388,8 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
       durationMs,
       itemsCount: 0,
       parsedCount: 0,
-      error: lastError || 'README not found on main/master/dev branches',
-      message: lastError || 'README not found on main/master/dev branches',
+      error: lastError || 'Source file not found on configured branches',
+      message: lastError || 'Source file not found on configured branches',
       timestamp: new Date().toISOString(),
     };
     return { opportunities: [], log: logEntry };
@@ -372,6 +403,7 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     opportunities = parseMarkdownBullets(content, repo);
   }
 
+  opportunities = dedupeOpportunities(opportunities.map(normalizeOpportunity).filter((item) => isUsefulOpportunity(item)));
   const isSuccess = opportunities.length > 0;
   const logEntry = {
     id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -385,10 +417,10 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     durationMs,
     itemsCount: opportunities.length,
     parsedCount: opportunities.length,
-    error: isSuccess ? null : 'Fetched README successfully, but 0 structured tables or listings were parsed',
+    error: isSuccess ? null : 'Fetched source file successfully, but 0 structured tables or listings were parsed',
     message: isSuccess
       ? `Parsed ${opportunities.length} opportunities from ${successfulUrl.split('/').slice(-2).join('/')}`
-      : 'Fetched README successfully, but 0 structured listings were found',
+      : 'Fetched source file successfully, but 0 structured listings were found',
     timestamp: new Date().toISOString(),
   };
 
