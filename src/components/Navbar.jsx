@@ -1,33 +1,9 @@
 import React from 'react';
-import { ArrowUpRight, Bookmark, ChartNoAxesCombined, Database, ListFilter, Moon, RefreshCw, ScrollText, Sun } from 'lucide-react';
+import { Bookmark, ChartNoAxesCombined, Database, Menu, Moon, Radar, RefreshCw, ScrollText, Sparkles, Sun, X } from 'lucide-react';
 
-export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme, isSyncing, onSyncAll, savedCount = 0, errorLogsCount = 0, sourcesCount = 0 }) {
-  const tabs = [
-    { id: 'explorer', label: 'Explore', icon: ListFilter },
-    { id: 'saved', label: 'Saved', icon: Bookmark, count: savedCount },
-    { id: 'sources', label: 'Sources', icon: Database, count: sourcesCount },
-    { id: 'analytics', label: 'Insights', icon: ChartNoAxesCombined },
-    { id: 'logs', label: 'Activity', icon: ScrollText, count: errorLogsCount || null },
-  ];
-  return (
-    <header className="radar-nav">
-      <div className="radar-nav-inner">
-        <button className="radar-brand" onClick={() => setActiveTab('explorer')} type="button" aria-label="OpportunityRadar home">
-          <span className="radar-brand-mark"><ArrowUpRight size={20} strokeWidth={2.5} /></span>
-          <span><strong>opportunity<span>radar</span></strong><small>A better place to start.</small></span>
-        </button>
-        <nav className="radar-tabs" aria-label="Main navigation">
-          {tabs.map(({ id, label, icon: Icon, count }) => (
-            <button className={activeTab === id ? 'radar-tab active' : 'radar-tab'} key={id} onClick={() => setActiveTab(id)} type="button" aria-current={activeTab === id ? 'page' : undefined}>
-              <Icon size={16} /><span>{label}</span>{count ? <b>{count}</b> : null}
-            </button>
-          ))}
-        </nav>
-        <div className="radar-nav-actions">
-          <button className="radar-sync" onClick={onSyncAll} disabled={isSyncing} type="button" title="Refresh curated sources"><RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} /><span>{isSyncing ? 'Refreshing' : 'Refresh'}</span></button>
-          <button className="radar-theme" onClick={toggleTheme} type="button" aria-label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'}>{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
-        </div>
-      </div>
-    </header>
-  );
+export default function Navbar({ activeTab, setActiveTab, theme, toggleTheme, isSyncing, onSyncAll, savedCount = 0, errorLogsCount = 0 }) {
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const select = (id) => { setActiveTab(id === 'matcher' ? 'explorer' : id); setMenuOpen(false); if (id === 'matcher') requestAnimationFrame(() => { window.dispatchEvent(new Event('open-radar-matcher')); document.getElementById('radar-matcher')?.scrollIntoView({ behavior: 'smooth' }); }); else window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const tabs = [['explorer', 'Explore opportunities', Radar], ['matcher', 'Radar matcher', Sparkles], ['saved', 'Saved watchlist', Bookmark], ['sources', 'Source archive', Database], ['analytics', 'Insights', ChartNoAxesCombined], ['logs', 'Activity', ScrollText]];
+  return <header className="sch-nav"><div className="sch-nav-inner"><button className="sch-brand" type="button" onClick={() => select('explorer')} aria-label="Opportunity Radar home"><span className="sch-logo"><Radar size={22} strokeWidth={2.8}/></span><span>OPPORTUNITY<span className="sch-brand-accent">RADAR</span><small>FIND YOUR NEXT BIG THING</small></span></button><nav className={menuOpen ? 'sch-nav-links open' : 'sch-nav-links'} aria-label="Main navigation">{tabs.map(([id, label, Icon]) => <button key={id} type="button" className={activeTab === id ? 'active' : ''} onClick={() => select(id)} aria-current={activeTab === id ? 'page' : undefined}><Icon size={16}/>{label}{id === 'saved' && savedCount > 0 && <b>{savedCount}</b>}{id === 'logs' && errorLogsCount > 0 && <b>{errorLogsCount}</b>}</button>)}</nav><div className="sch-nav-actions"><button type="button" className="sch-icon-button" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'}>{theme === 'dark' ? <Sun size={19}/> : <Moon size={19}/>}</button><button type="button" className="sch-refresh" onClick={onSyncAll} disabled={isSyncing} title="Refresh source archive"><RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''}/><span>Refresh feeds</span></button><button type="button" className="sch-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'}>{menuOpen ? <X/> : <Menu/>}</button></div></div></header>;
 }

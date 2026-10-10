@@ -8,7 +8,7 @@ export const DEFAULT_FILTERS = Object.freeze({
   deadline: 'all',
   location: 'all',
   repo: 'all',
-  sort: 'featured',
+  sort: 'details-desc',
 });
 
 export function deadlineState(value, today = new Date()) {
@@ -24,6 +24,18 @@ export function deadlineState(value, today = new Date()) {
 
 function normalize(value) {
   return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+const DETAIL_FIELDS = ['host', 'location', 'deadline', 'dates', 'stipend', 'eligibility', 'notes'];
+
+function hasDetail(item, field) {
+  const value = cleanUnknown(item[field]);
+  if (field === 'location' && /^(?:multiple countries|varies by programme)$/i.test(value)) return false;
+  return Boolean(value);
+}
+
+function detailCount(item) {
+  return DETAIL_FIELDS.reduce((count, field) => count + Number(hasDetail(item, field)), 0);
 }
 
 function matchesLocation(value, selected) {
@@ -56,6 +68,13 @@ export function filterOpportunities(items, filters = DEFAULT_FILTERS, today = ne
     return true;
   });
 
+  if (filters.sort === 'details-desc') {
+    return matching.map((item, index) => ({ item, index, details: detailCount(item) }))
+      .sort((a, b) => b.details - a.details
+        || Number(hasDetail(b.item, 'location')) - Number(hasDetail(a.item, 'location'))
+        || a.index - b.index)
+      .map(({ item }) => item);
+  }
   if (filters.sort === 'title') return [...matching].sort((a, b) => a.title.localeCompare(b.title));
   if (filters.sort === 'host') return [...matching].sort((a, b) => (a.host || '').localeCompare(b.host || ''));
   if (filters.sort === 'deadline-asc' || filters.sort === 'deadline-desc') {
