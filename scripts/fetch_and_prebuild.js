@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fetchRepositoryOpportunities } from '../src/services/githubFetcher.js';
-import { canonicalUrl, dedupeOpportunities, isUsefulOpportunity, normalizeOpportunity } from '../src/services/opportunityData.js';
+import { fetchWebSource } from './webFetcher.js';
+import { canonicalUrl, dedupeOpportunities, isUsefulOpportunity, normalizeOpportunity, sourceKey } from '../src/services/opportunityData.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dataPath = (name) => path.join(root, 'src/data', name);
@@ -16,10 +17,12 @@ async function run() {
   const all = [];
   const logs = [];
   for (const source of sources) {
-    const result = await fetchRepositoryOpportunities(source, process.env.GITHUB_TOKEN || '');
+    const result = source.type === 'website'
+      ? await fetchWebSource(source)
+      : await fetchRepositoryOpportunities(source, process.env.GITHUB_TOKEN || '');
     logs.push(result.log);
     all.push(...result.opportunities);
-    console.log(source.owner + '/' + source.name + ': ' + result.log.status + ', ' + result.opportunities.length + ' leads');
+    console.log(sourceKey(source) + ': ' + result.log.status + ', ' + result.opportunities.length + ' leads');
   }
 
   const failed = logs.filter((log) => log.status !== 'success');

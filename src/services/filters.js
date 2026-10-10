@@ -62,7 +62,7 @@ function normalize(value) {
   return String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
-const DETAIL_FIELDS = ['host', 'location', 'deadline', 'dates', 'stipend', 'notes'];
+const DETAIL_FIELDS = ['host', 'location', 'deadline', 'dates', 'stipend', 'notes', 'summary', 'eligibility', 'benefits', 'howToApply', 'applicationUrl'];
 
 function hasDetail(item, field) {
   const value = cleanUnknown(item[field]);
@@ -89,7 +89,7 @@ export function filterOpportunities(items, filters = DEFAULT_FILTERS) {
   const selected = { ...DEFAULT_FILTERS, ...filters };
   const queryTerms = normalize(selected.search).trim().split(/\s+/).filter(Boolean);
   const matching = items.filter((item) => {
-    const searchable = normalize([item.title, item.host, item.location, item.notes, sourceKey(item.sourceRepo)].join(' '));
+    const searchable = normalize([item.title, item.host, item.location, item.notes, item.summary, item.eligibility, item.benefits, sourceKey(item.sourceRepo)].join(' '));
     if (!queryTerms.every((term) => searchable.includes(term))) return false;
     if (selected.type !== 'all' && item.type !== selected.type) return false;
     if (selected.repo !== 'all' && sourceKey(item.sourceRepo) !== selected.repo) return false;

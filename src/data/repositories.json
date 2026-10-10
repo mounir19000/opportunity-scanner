@@ -27,5 +27,35 @@
     "description": "Undergraduate research internship program directory.",
     "focus": "Undergraduate research",
     "url": "https://github.com/zapplyjobs/Research-Internships-for-Undergraduates"
+  },
+  {
+    "id": "globalsouthopportunities.com",
+    "name": "Global South Opportunities",
+    "type": "website",
+    "category": "Tech opportunities",
+    "description": "Scholarships, internships, jobs, fellowships, and research programs relevant to computing.",
+    "focus": "Computer science, software, AI, data, and related fields",
+    "url": "https://www.globalsouthopportunities.com/",
+    "apiUrl": "https://www.globalsouthopportunities.com/wp-json/wp/v2/posts"
+  },
+  {
+    "id": "opportunitiescorners.com",
+    "name": "Opportunities Corners",
+    "type": "website",
+    "category": "Tech opportunities",
+    "description": "Funded study and research programs with computing and engineering options.",
+    "focus": "Computer science, AI, engineering, and technology programs",
+    "url": "https://opportunitiescorners.com/",
+    "apiUrl": "https://opportunitiescorners.com/wp-json/wp/v2/posts"
+  },
+  {
+    "id": "for9a.com",
+    "name": "For9a",
+    "type": "website",
+    "category": "Tech opportunities",
+    "description": "MENA-friendly scholarships, internships, jobs, and training opportunities.",
+    "focus": "Computer science, software, AI, data, and IT",
+    "url": "https://www.for9a.com/en",
+    "apiUrl": "https://lara.for9a.com/graphql"
   }
 ]

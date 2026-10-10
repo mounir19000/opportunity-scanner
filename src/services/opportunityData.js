@@ -1,7 +1,7 @@
 export function sourceKey(source) {
   if (typeof source === 'string') return source;
   if (!source) return '';
-  return source.owner ? `${source.owner}/${source.name}` : source.name || '';
+  return source.id || (source.owner ? `${source.owner}/${source.name}` : source.name || '');
 }
 
 export function canonicalUrl(value) {
@@ -45,7 +45,7 @@ export function cleanUnknown(value) {
 
 export function explicitDate(value) {
   const text = cleanUnknown(value);
-  if (!text || /^(?:started)\b|(?:not|no|unknown|rolling|check|see|open|ongoing)/i.test(text)) return null;
+  if (!text || /^started\b/i.test(text)) return null;
   const iso = text.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/);
   if (iso) {
     const date = new Date(Date.UTC(+iso[1], +iso[2] - 1, +iso[3]));
@@ -65,7 +65,6 @@ export function explicitDate(value) {
 export function normalizeOpportunity(item) {
   const repo = sourceKey(item.sourceRepo);
   const normalized = { ...item };
-  delete normalized.eligibility;
   // The school organizer's page is reachable; the list's subdomain has a broken TLS chain.
   const url = /^https?:\/\/(?:www\.)?anais\.naamii\.org\.np\//i.test(item.url || '')
     ? 'https://www.naamii.org/anais'
@@ -119,4 +118,18 @@ export function replaceSourceOpportunities(previous, source, fresh) {
     discoveredAt: firstSeenByUrl.get(canonicalUrl(item.url)) || item.discoveredAt,
   }));
   return dedupeOpportunities([...updated, ...retained]);
+}
+
+export function mergeSourceOpportunities(previous, source, fresh) {
+  const key = sourceKey(source);
+  const oldForSource = previous.filter((item) => sourceKey(item.sourceRepo) === key);
+  const firstSeenByUrl = new Map(oldForSource.map((item) => [canonicalUrl(item.url), item.discoveredAt]));
+  const updated = fresh.map((item) => ({
+    ...item,
+    id: stableOpportunityId(item),
+    discoveredAt: firstSeenByUrl.get(canonicalUrl(item.url)) || item.discoveredAt,
+  }));
+  const existing = oldForSource.filter((item) => isUsefulOpportunity(item));
+  const other = previous.filter((item) => sourceKey(item.sourceRepo) !== key);
+  return dedupeOpportunities([...updated, ...existing, ...other]);
 }

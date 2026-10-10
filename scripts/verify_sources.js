@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fetchRepositoryOpportunities } from '../src/services/githubFetcher.js';
+import { fetchWebSource } from './webFetcher.js';
 import { isUsefulOpportunity, sourceKey } from '../src/services/opportunityData.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -31,8 +32,18 @@ async function run() {
   for (const source of sources) {
     const key = sourceKey(source);
     try {
-      if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(key) || seen.has(key)) throw new Error('Invalid or duplicate source key');
+      if (seen.has(key)) throw new Error('Invalid or duplicate source key');
       seen.add(key);
+      if (source.type === 'website') {
+        if (!/^[a-z0-9.-]+$/.test(key) || !source.url.startsWith('https://') || !source.apiUrl.startsWith('https://')) throw new Error('Invalid website source configuration');
+        const { opportunities, log } = await fetchWebSource(source, source.id === 'for9a.com' ? { sampleDetails: 3 } : { samplePages: 1 });
+        if (log.status !== 'success' || !opportunities.length || opportunities.some((item) => sourceKey(item.sourceRepo) !== key || !isUsefulOpportunity(item))) {
+          throw new Error('Website sample fetch/parse failed: ' + (log.error || log.message));
+        }
+        console.log(key + ' | OK | ' + opportunities.length + ' sampled leads');
+        continue;
+      }
+      if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(key)) throw new Error('Invalid repository key');
       if (source.url !== 'https://github.com/' + key) throw new Error('Source URL is not canonical');
       if (!/^[A-Za-z0-9_.-]+$/.test(source.branch || '')) throw new Error('Explicit branch is required');
       if (source.file && !/^[A-Za-z0-9_.-]+\.md$/i.test(source.file)) throw new Error('Invalid configured Markdown file');

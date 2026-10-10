@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, SearchX } from 'lucide-react';
 import HeroSearch from '../components/HeroSearch';
 import FilterBar from '../components/FilterBar';
 import OpportunityCard from '../components/OpportunityCard';
+import reposData from '../data/repositories.json';
 import { DEFAULT_FILTERS, LOCATION_OPTIONS, filterOpportunities, parseDirectoryState, serializeDirectoryState } from '../services/filters';
 import { sourceKey } from '../services/opportunityData';
 
@@ -51,7 +52,8 @@ export default function ExplorerPage({ opportunities = [], loading = false, load
   }, []);
 
   const types = useMemo(() => [...new Set(opportunities.map((item) => item.type).filter(Boolean))].sort(), [opportunities]);
-  const repos = useMemo(() => [...new Set(opportunities.map((item) => sourceKey(item.sourceRepo)).filter(Boolean))].sort(), [opportunities]);
+  const repos = useMemo(() => reposData.map(sourceKey), []);
+  const sourceLabels = useMemo(() => Object.fromEntries(reposData.map((source) => [sourceKey(source), source.name])), []);
   useEffect(() => {
     if (loading || !opportunities.length) return;
     setState((current) => {
@@ -96,7 +98,7 @@ export default function ExplorerPage({ opportunities = [], loading = false, load
           </div>
         </div>
         <div className="sch-source-layout">
-          <FilterBar filters={filters} onChange={update} onReset={reset} types={types} repos={repos} locations={locations} totalResults={results.length} />
+          <FilterBar filters={filters} onChange={update} onReset={reset} types={types} repos={repos} sourceLabels={sourceLabels} locations={locations} totalResults={results.length} />
           <div className="sch-source-results" id="source-results">
             <div className="sch-source-toolbar">
               <div><strong>{results.length.toLocaleString()} matching leads</strong><span>Check the original listing before applying.</span></div>

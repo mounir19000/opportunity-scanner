@@ -51,6 +51,8 @@ export function inferType(title = '', category = '') {
   const c = (category || '').toLowerCase();
   if (t.includes('summer school') || t.includes('winter school') || c.includes('summer school') || t.includes('school'))
     return 'Summer School';
+  if (t.includes('course') || c.includes('course')) return 'Course';
+  if (t.includes('bootcamp') || t.includes('training') || c.includes('training') || c.includes('workshop')) return 'Training';
   if (t.includes('intern') || t.includes('co-op') || c.includes('intern'))
     return 'Internship';
   if (t.includes('fellowship') || t.includes('fellow') || c.includes('fellowship'))
@@ -65,6 +67,8 @@ export function inferType(title = '', category = '') {
     return 'Residency';
   if (t.includes('hackathon') || t.includes('challenge') || t.includes('contest'))
     return 'Hackathon';
+  if (t.includes('competition') || c.includes('competition')) return 'Competition';
+  if (t.includes('job') || c.includes('job')) return 'Job';
   return 'Opportunity';
 }
 

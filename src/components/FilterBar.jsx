@@ -12,7 +12,7 @@ function Field({ label, value, options, onChange }) {
   );
 }
 
-export default function FilterBar({ filters, onChange, onReset, types, repos, locations, totalResults }) {
+export default function FilterBar({ filters, onChange, onReset, types, repos, sourceLabels = {}, locations, totalResults }) {
   const activeCount = ['search', 'type', 'location', 'repo'].filter((key) => filters[key] && filters[key] !== 'all').length;
   return (
     <aside className="radar-filters" aria-label="Opportunity filters">
@@ -25,7 +25,7 @@ export default function FilterBar({ filters, onChange, onReset, types, repos, lo
       </div>
       <Field label="Program type" value={filters.type} onChange={(value) => onChange('type', value)} options={ [['all', 'All types'], ...types.map((value) => [value, value])] } />
       <Field label="Location" value={filters.location} onChange={(value) => onChange('location', value)} options={locations} />
-      <Field label="Source" value={filters.repo} onChange={(value) => onChange('repo', value)} options={ [['all', 'All sources'], ...repos.map((value) => [value, value])] } />
+      <Field label="Source" value={filters.repo} onChange={(value) => onChange('repo', value)} options={ [['all', 'All sources'], ...repos.map((value) => [value, sourceLabels[value] || value])] } />
       <div className="radar-filter-foot">{totalResults.toLocaleString()} matching leads{activeCount ? ' · ' + activeCount + ' active filters' : ''}</div>
     </aside>
   );

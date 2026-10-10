@@ -23,7 +23,7 @@ export default function SourcesPage({ onFetchRepo, onSyncAll, onRetryFailed, onC
         eyebrow="THE SOURCE DESK"
         title="Small list."
         accent="Better signal."
-        description="These repositories provide the leads in Explore. A source listing does not confirm that an application is still open."
+        description="These sources provide the leads in Explore. Website refresh checks recent posts or active listings; the scheduled snapshot scans the full recent archive. Confirm eligibility and dates on each original page."
         metric={reposData.length.toLocaleString()}
         metricLabel="tracked sources"
       />
@@ -34,7 +34,7 @@ export default function SourcesPage({ onFetchRepo, onSyncAll, onRetryFailed, onC
             <h2>{reposData.length} sources <em>· {opportunities.length.toLocaleString()} leads.</em></h2>
             {updatedAt && <p className="sch-updated">Directory copy updated {new Date(updatedAt).toLocaleString()}</p>}
           </div>
-          <div className="sch-interior-actions"><button className="sch-button sch-button-primary" type="button" onClick={onSyncAll} disabled={isSyncing}><RefreshCw size={15} className={isSyncing ? 'animate-spin' : ''} /> Refresh all</button></div>
+          <div className="sch-interior-actions"><button className="sch-button sch-button-primary" type="button" onClick={onSyncAll} disabled={isSyncing}><RefreshCw size={15} className={isSyncing ? 'animate-spin' : ''} /> Refresh all sources</button></div>
         </div>
         <div className="sch-directory-grid">
           {reposData.map((repo, index) => {
@@ -46,8 +46,8 @@ export default function SourcesPage({ onFetchRepo, onSyncAll, onRetryFailed, onC
               <p>{repo.description}</p>
               <div className="sch-directory-focus">{repo.focus}</div>
               <div className="sch-directory-card-actions">
-                <a className="sch-button sch-button-primary" href={sourceUrl} target="_blank" rel="noopener noreferrer">{repo.file ? 'View source file' : 'View repository'} <ArrowUpRight size={15} /></a>
-                <button className="sch-button sch-button-light" onClick={() => onFetchRepo(key)} disabled={isSyncing} type="button" aria-label={`Refresh ${repo.name}`}><RefreshCw size={14} className={lastFetchedRepo === key ? 'animate-spin' : ''} /> Refresh</button>
+                <a className="sch-button sch-button-primary" href={sourceUrl} target="_blank" rel="noopener noreferrer">{repo.type === 'website' ? 'View website' : repo.file ? 'View source file' : 'View repository'} <ArrowUpRight size={15} /></a>
+                <button className="sch-button sch-button-light" onClick={() => onFetchRepo(key)} disabled={isSyncing} type="button" aria-label={`Refresh ${repo.name}`}><RefreshCw size={14} className={lastFetchedRepo === key ? 'animate-spin' : ''} /> {lastFetchedRepo === key ? 'Refreshing…' : 'Refresh'}</button>
               </div>
             </article>;
           })}

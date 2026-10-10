@@ -1,17 +1,17 @@
 # Source audit — 10 October 2026
 
-The active manifest is src/data/repositories.json, and the deployable snapshot is public/opportunities.json. A source passes the active-feed bar when its canonical GitHub commit feed is reachable, its latest commit is within 180 days, its configured branch and file fetch with HTTP 200, and the parser yields useful, correctly attributed destinations. Internship feeds must predominantly link to individual postings.
+The active source list is `src/data/repositories.json`. The deployable data is `public/opportunities.json`. The importer keeps computing and closely related opportunities, rejects known past deadlines, and saves the details each source actually publishes: summary, host, location, dates, funding, eligibility, benefits, application instructions, original article, and an application link when one can be identified.
 
-| Retained source | Branch | Latest public commit | Live parsed leads | Review |
-| --- | --- | --- | ---: | --- |
-| [speedyapply/2027-SWE-College-Jobs: INTERN_INTL.md](https://github.com/speedyapply/2027-SWE-College-Jobs/blob/main/INTERN_INTL.md) | main | 2026-10-09 | 535 | Only the international internship file is fetched. The parser uses Position and Posting, not company homepages. |
-| [hazratali/awesome-ai-summerschool](https://github.com/hazratali/awesome-ai-summerschool) | main | 2026-10-01 | 3 | Current AI school list; two program sites returned HTTP 200. The ANAIS list URL had a TLS problem, so its lead points to the organizer's working official page. |
-| [zapplyjobs/Research-Internships-for-Undergraduates](https://github.com/zapplyjobs/Research-Internships-for-Undergraduates) | main | 2026-10-07 | 75 | Country headings in the README now populate each lead's location. Worldwide groups receive broad labels. Host cycles and eligibility must be checked individually. |
+| Source | Import path | Current leads | Notes |
+| --- | --- | ---: | --- |
+| [speedyapply/2027-SWE-College-Jobs](https://github.com/speedyapply/2027-SWE-College-Jobs/blob/main/INTERN_INTL.md) | `main/INTERN_INTL.md` | 537 | International software internship file; individual posting links. |
+| [hazratali/awesome-ai-summerschool](https://github.com/hazratali/awesome-ai-summerschool) | `main/README.md` | 3 | Current AI school programs; one broken list URL is replaced with the organizer's working page. |
+| [zapplyjobs/Research-Internships-for-Undergraduates](https://github.com/zapplyjobs/Research-Internships-for-Undergraduates) | `main/README.md` | 75 | Undergraduate research directory with locations from country headings. |
+| [Global South Opportunities](https://www.globalsouthopportunities.com/) | Public WordPress posts from the last two years | 435 | Scans every recent page; retains computing and adjacent fields from titles and article details. |
+| [Opportunities Corners](https://opportunitiescorners.com/) | Public WordPress posts from the last two years | 27 | Pulls full articles, including eligibility, funding, and application instructions where present. |
+| [For9a](https://www.for9a.com/en) | Public active education and jobs listings, computing search terms, and detail pages | 47 | Reads structured opportunity details and application instructions. Application links are shown only when they can be matched to the listing. |
 
-Rejected from the active feed:
-
-- [karanwxliaa/Research-for-UG-Students](https://github.com/karanwxliaa/Research-for-UG-Students): last public commit was 2025-03-31. Its program links overlapped heavily with the more recently updated research directory.
-- [suco-gt/HPC-Internships](https://github.com/suco-gt/HPC-Internships): updated 2026-09-07, but a review of all 12 retained leads found a direct PNNL posting returning HTTP 404 and several broad directory or employer-homepage links.
+The three website sources are refreshed by the prebuild and the scheduled GitHub Actions snapshot job. Browser refresh also works for all six sources: it scans the last 30 days of WordPress posts and merges them with existing listings, while For9a refresh checks all active public listings. Every website listing links back to its article or detail page. A missing field means the importer did not find a reliable value in the source; it does not imply that the benefit, deadline, or requirement does not exist. The app shows the source's publication date when available. Applicants should confirm each opportunity on the original page and official application site.
 
 Verification commands:
 
@@ -20,6 +20,6 @@ Verification commands:
     npm test
     npm run build
 
-The source verifier is read-only and fails if any configured repository is stale, unreachable, misconfigured, or produces no usable leads. The prebuild regenerates the snapshot only when every source succeeds and the data has changed. The current snapshot has 613 leads from three sources, including 535 from `main/INTERN_INTL.md`. The app loads this JSON separately from its JavaScript bundle. GitHub Actions checks and refreshes the snapshot daily through `.github/workflows/refresh-sources.yml`.
+The source verifier samples each website and checks the GitHub repositories. The prebuild preserves the previous snapshot if any configured source fails or yields no usable leads. The resulting snapshot has 1,124 unique leads from six sources.
 
-Repository and destination checks establish source quality at the feed level. An international-list entry does not establish citizenship or work-authorization eligibility, and it does not prove that an application remains open. Official program pages and employers are the authority for those details.
+Previously rejected GitHub sources remain excluded: `karanwxliaa/Research-for-UG-Students` was stale, and `suco-gt/HPC-Internships` had broken and overly broad destination links.

@@ -17,8 +17,8 @@ import {
   clearIngestionLogs,
 } from './services/storage';
 import { fetchRepositoryOpportunities } from './services/githubFetcher';
-import { replaceSourceOpportunities, sourceKey } from './services/opportunityData';
-import { getCachedOpportunities, normalizeListings, saveCachedOpportunities } from './services/opportunityCache';
+import { mergeSourceOpportunities, replaceSourceOpportunities, sourceKey } from './services/opportunityData';
+import { getCachedOpportunities, reconcileSnapshot, saveCachedOpportunities } from './services/opportunityCache';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 const validViews = new Set(['explorer', 'saved', 'sources']);
@@ -35,7 +35,7 @@ function viewFromUrl() {
 export default function App() {
   const [theme, setTheme] = useState('light');
   const [activeTab, setActiveTab] = useState(viewFromUrl);
-  const [catalog, setCatalog] = useState(() => getCachedOpportunities(reposData) || { items: [], updatedAt: '' });
+  const [catalog, setCatalog] = useState(() => getCachedOpportunities(reposData) || { items: [], updatedAt: '', sourceUpdatedAt: {} });
   const catalogRef = useRef(catalog);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -86,16 +86,10 @@ export default function App() {
       })
       .then((snapshot) => {
         if (cancelled) return;
-        const items = normalizeListings(Array.isArray(snapshot) ? snapshot : snapshot.items, reposData);
-        const generatedAt = Array.isArray(snapshot)
-          ? items.reduce((latest, item) => item.discoveredAt > latest ? item.discoveredAt : latest, '')
-          : snapshot.generatedAt || '';
-        if (!items.length) throw new Error('The opportunity snapshot is empty.');
-        if (generatedAt >= catalogRef.current.updatedAt) {
-          const next = { items, updatedAt: generatedAt };
-          catalogRef.current = next;
-          setCatalog(next);
-        }
+        const next = reconcileSnapshot(snapshot, catalogRef.current, reposData);
+        if (!next.items.length) throw new Error('The opportunity snapshot is empty.');
+        catalogRef.current = next;
+        setCatalog(next);
         setLoading(false);
       })
       .catch((error) => {
@@ -114,20 +108,34 @@ export default function App() {
     setActiveTab(view);
   };
 
-  const commitListings = (items) => {
-    const next = { items, updatedAt: new Date().toISOString() };
+  const commitListings = (items, source) => {
+    const updatedAt = new Date().toISOString();
+    const sourceUpdatedAt = { ...catalogRef.current.sourceUpdatedAt, [sourceKey(source)]: updatedAt };
+    const next = { items, updatedAt, sourceUpdatedAt };
     catalogRef.current = next;
     setCatalog(next);
-    saveCachedOpportunities(items, reposData, next.updatedAt);
+    saveCachedOpportunities(items, reposData, updatedAt, sourceUpdatedAt);
   };
 
-  const recordLog = (log) => setLogs((previous) => [log, ...previous].slice(0, 100));
+  const recordLog = (log) => setLogs((previous) => [{ id: log.id || 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), ...log }, ...previous].slice(0, 100));
 
   const refreshSource = async (repo) => {
-    const result = await fetchRepositoryOpportunities(repo);
+    let result;
+    if (repo.type === 'website') {
+      const { fetchWebSource } = await import('../scripts/webFetcher.js');
+      const options = repo.id === 'for9a.com'
+        ? {}
+        : { since: new Date(Date.now() - 30 * 86400000).toISOString() };
+      result = await fetchWebSource(repo, options);
+    } else {
+      result = await fetchRepositoryOpportunities(repo);
+    }
     recordLog(result.log);
     if (result.log.status === 'success') {
-      commitListings(replaceSourceOpportunities(catalogRef.current.items, repo, result.opportunities));
+      const items = repo.type === 'website' && repo.id !== 'for9a.com'
+        ? mergeSourceOpportunities(catalogRef.current.items, repo, result.opportunities)
+        : replaceSourceOpportunities(catalogRef.current.items, repo, result.opportunities);
+      commitListings(items, repo);
     }
     return result;
   };
@@ -147,7 +155,9 @@ export default function App() {
     try {
       const result = await refreshSource(repo);
       showToast(result.log.status === 'success'
-        ? 'Refreshed ' + result.opportunities.length + ' leads from ' + repo.name + '.'
+        ? repo.type === 'website' && repo.id !== 'for9a.com'
+          ? 'Checked ' + result.log.parsedCount + ' recent posts from ' + repo.name + '; found ' + result.opportunities.length + ' computing leads.'
+          : 'Refreshed ' + result.opportunities.length + ' leads from ' + repo.name + '.'
         : 'Could not refresh ' + repo.name + ': ' + (result.log.error || result.log.message),
       result.log.status === 'success' ? 'success' : 'error');
     } catch (error) {

@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_FILTERS, deadlineState, filterOpportunities, parseDirectoryState, serializeDirectoryState } from '../src/services/filters.js';
-import { canonicalUrl, dedupeOpportunities, isUsefulOpportunity, normalizeOpportunity, replaceSourceOpportunities, sourceKey, stableOpportunityId } from '../src/services/opportunityData.js';
+import { canonicalUrl, dedupeOpportunities, explicitDate, isUsefulOpportunity, mergeSourceOpportunities, normalizeOpportunity, replaceSourceOpportunities, sourceKey, stableOpportunityId } from '../src/services/opportunityData.js';
+import { reconcileSnapshot } from '../src/services/opportunityCache.js';
 
 const today = new Date('2026-10-10T12:00:00Z');
 const items = [
@@ -54,9 +55,33 @@ test('stable IDs follow source and listing URL across source reordering', () => 
   assert.equal(dedupeOpportunities([{ url: old[0].url }, { url: fresh[1].url }]).length, 1);
 });
 
+test('a newer browser cache cannot hide website rows from the published snapshot', () => {
+  const sources = [{ owner: 'a', name: 'roles' }, { id: 'example.org', name: 'Example' }];
+  const published = { generatedAt: '2026-10-10T10:00:00Z', items: [
+    { title: 'Software Internship', url: 'https://jobs.example.com/a', sourceRepo: 'a/roles' },
+    { title: 'Computer Science Scholarship', url: 'https://example.org/scholarship', sourceRepo: 'example.org' },
+  ] };
+  const oldCache = { updatedAt: '2026-10-10T11:00:00Z', items: [published.items[0]] };
+  assert.deepEqual(reconcileSnapshot(published, oldCache, sources).items.map((item) => item.sourceRepo), ['a/roles', 'example.org']);
+
+  const refreshed = { ...oldCache, sourceUpdatedAt: { 'a/roles': '2026-10-10T11:00:00Z' }, items: [
+    { title: 'New Software Internship', url: 'https://jobs.example.com/b', sourceRepo: 'a/roles' },
+  ] };
+  const result = reconcileSnapshot(published, refreshed, sources);
+  assert.deepEqual(result.items.map((item) => item.url), ['https://example.org/scholarship', 'https://jobs.example.com/b']);
+});
+
+test('recent website refresh adds new posts without dropping older listings', () => {
+  const source = { id: 'example.org' };
+  const old = { title: 'Computer Science Scholarship', url: 'https://example.org/old', sourceRepo: source.id, discoveredAt: '2026-10-01' };
+  const fresh = { title: 'AI Fellowship', url: 'https://example.org/new', sourceRepo: source.id, discoveredAt: '2026-10-10' };
+  assert.deepEqual(mergeSourceOpportunities([old], source, [fresh]).map((item) => item.url), [fresh.url, old.url]);
+});
+
 test('curation still rejects invalid links and expired explicit dates', () => {
   const lead = { title: 'Research internship 2027', url: 'https://example.org/apply', sourceRepo: 'a/roles', deadline: '2026-11-02' };
   assert.equal(isUsefulOpportunity(lead, today), true);
   assert.equal(isUsefulOpportunity({ ...lead, url: 'https://img.shields.io/badge/-Apply-blue' }, today), false);
   assert.equal(isUsefulOpportunity({ ...lead, deadline: '2026-09-01' }, today), false);
+  assert.equal(explicitDate('Application deadline: 30 November 2026')?.toISOString().slice(0, 10), '2026-11-30');
 });
