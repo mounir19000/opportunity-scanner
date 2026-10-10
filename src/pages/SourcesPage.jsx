@@ -26,13 +26,14 @@ export default function SourcesPage({ onFetchRepo, isSyncing, lastFetchedRepo, o
         <div className="radar-source-grid">
           {sources.map((repo, index) => {
             const key = sourceKey(repo);
+            const sourceUrl = repo.file ? `${repo.url}/blob/${repo.branch}/${repo.file}` : repo.url;
             return <article className="radar-source-card" key={key}>
               <div className="radar-source-top"><span>{String(index + 1).padStart(2, '0')} / {repo.category}</span><strong>{counts.get(key) || 0} leads</strong></div>
               <h3>{repo.name}</h3>
               <p>{repo.description}</p>
               <div className="radar-source-focus">{repo.focus}</div>
               <div className="radar-source-actions">
-                <a href={repo.url} target="_blank" rel="noopener noreferrer">View repository <ArrowUpRight size={15} /></a>
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer">{repo.file ? 'View source file' : 'View repository'} <ArrowUpRight size={15} /></a>
                 <button onClick={() => onFetchRepo(key)} disabled={isSyncing} type="button"><RefreshCw size={14} className={lastFetchedRepo === key ? 'animate-spin' : ''} /> Refresh</button>
               </div>
             </article>;

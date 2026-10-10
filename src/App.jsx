@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import './scholarhub.css';
 import Navbar from "./components/Navbar";
 import DetailModal from "./components/DetailModal";
+import OpportunityDetailSheet from "./components/OpportunityDetailSheet";
 import ExplorerPage from "./pages/ExplorerPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import SourcesPage from "./pages/SourcesPage";
@@ -10,6 +12,7 @@ import SavedPage from "./pages/SavedPage";
 import initialOpportunitiesData from "./data/initialOpportunities.json";
 import initialLogsData from "./data/initialLogs.json";
 import reposData from "./data/repositories.json";
+import { mockOpportunities } from "./lib/mock-data";
 
 import {
   getSavedItems,
@@ -31,7 +34,7 @@ export default function App() {
   // Theme state (default: dark)
   const [theme, setTheme] = useState(() => {
     const saved = getSettings();
-    return saved.theme || "dark";
+    return saved.theme || "light";
   });
 
   // Active navigation tab
@@ -281,7 +284,6 @@ export default function App() {
             savedIds={savedIds}
             onToggleSave={handleToggleSave}
             onSelectOpportunity={(opp) => setSelectedOpportunity(opp)}
-            sourcesCount={repositoryList.length}
           />
         )}
 
@@ -324,12 +326,18 @@ export default function App() {
       </main>
 
       <footer className="radar-footer">
-        <span>opportunityradar · {repositoryList.length} reviewed sources</span>
-        <span>Leads are gathered from source listings. Check the original page before applying.</span>
+        <span>Opportunity Radar · {mockOpportunities.length} reviewed programmes · {opportunities.length.toLocaleString()} source leads · {repositoryList.length} feeds</span>
+        <span>Review programme details and deadlines on the official page before applying.</span>
       </footer>
 
       {/* Opportunity Detail Modal */}
-      {selectedOpportunity && (
+      {selectedOpportunity?.applicationUrl && <OpportunityDetailSheet
+        opportunity={selectedOpportunity}
+        onClose={() => setSelectedOpportunity(null)}
+        isSaved={savedIds.has(selectedOpportunity.id)}
+        onToggleSave={handleToggleSave}
+      />}
+      {selectedOpportunity && !selectedOpportunity.applicationUrl && (
         <DetailModal
           opportunity={selectedOpportunity}
           isOpen={Boolean(selectedOpportunity)}

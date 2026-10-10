@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deadlineState, filterOpportunities } from '../src/services/filters.js';
+import { DEFAULT_FILTERS, deadlineState, filterOpportunities } from '../src/services/filters.js';
 import { fundingKind, isUsefulOpportunity, normalizeOpportunity, sourceKey } from '../src/services/opportunityData.js';
 
 const today = new Date('2026-10-05T12:00:00Z');
@@ -38,6 +38,21 @@ test('dates sort chronologically with unknown dates last', () => {
   assert.deepEqual(filterOpportunities(items, { sort: 'deadline-asc' }, today).map((x) => x.title), ['Summer School', 'Software Internship', 'Research Program']);
 });
 
+test('default order puts listings with more actual details first', () => {
+  const leads = [
+    { title: 'Sparse lead' },
+    { title: 'Vague location', location: 'Varies by programme' },
+    { title: 'Host only', host: 'Institute' },
+    { title: 'Location only', location: 'Canada' },
+    { title: 'Detailed programme', host: 'University', location: 'Germany', dates: 'July 2027', stipend: 'Stipend available', notes: 'Open to undergraduates' },
+  ];
+  assert.equal(DEFAULT_FILTERS.sort, 'details-desc');
+  assert.deepEqual(filterOpportunities(leads).map((x) => x.title), [
+    'Detailed programme', 'Location only', 'Host only', 'Sparse lead', 'Vague location',
+  ]);
+  assert.deepEqual(filterOpportunities(leads, { sort: 'featured' }).map((x) => x.title), leads.map((x) => x.title));
+});
+
 test('curation rejects badges, repository self-links, and expired listings', () => {
   const base = { title: 'Research internship 2027', url: 'https://example.org/apply', sourceRepo: 'a/roles', deadline: '2026-11-02' };
   assert.equal(isUsefulOpportunity(base, today), true);
@@ -54,4 +69,19 @@ test('school link uses the verified organizer destination', () => {
     url: 'https://anais.naamii.org.np/?utm_source=gemini',
   });
   assert.equal(item.url, 'https://www.naamii.org/anais');
+});
+
+test('SoRAIM source deadline text is preserved verbatim without treating it as a closing date', () => {
+  const lead = {
+    title: 'ACM Europe Winter School on Social Robotics, Artificial Intelligence and Multimedia (SoRAIM’27)',
+    sourceRepo: 'hazratali/awesome-ai-summerschool',
+    url: 'https://project.inria.fr/soraim/',
+    deadline: 'Started 1 September 2027',
+    dates: '1 – 5 February 2027',
+  };
+  const normalized = normalizeOpportunity(lead);
+  assert.equal(normalized.deadline, 'Started 1 September 2027');
+  assert.equal(deadlineState(normalized.deadline, today).kind, 'unknown');
+  assert.equal(normalized.applicationOpens, undefined);
+  assert.equal(normalizeOpportunity({ ...lead, deadline: '18 October 2026' }).deadline, '18 October 2026');
 });

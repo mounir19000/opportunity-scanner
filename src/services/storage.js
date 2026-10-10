@@ -108,9 +108,9 @@ export const getSettings = () => {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { theme: 'dark' };
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { theme: 'light' };
   } catch (e) {
-    return { theme: 'dark', githubToken: '' };
+    return { theme: 'light', githubToken: '' };
   }
 };
 
