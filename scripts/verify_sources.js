@@ -35,6 +35,7 @@ async function run() {
       seen.add(key);
       if (source.url !== 'https://github.com/' + key) throw new Error('Source URL is not canonical');
       if (!/^[A-Za-z0-9_.-]+$/.test(source.branch || '')) throw new Error('Explicit branch is required');
+      if (source.file && !/^[A-Za-z0-9_.-]+\.md$/i.test(source.file)) throw new Error('Invalid configured Markdown file');
 
       const feed = await fetchFeed('https://github.com/' + key + '/commits/' + source.branch + '.atom');
       if (!feed.includes('Recent Commits to ' + source.name + ':' + source.branch)) throw new Error('Commit feed does not match source');
@@ -46,9 +47,9 @@ async function run() {
 
       const { opportunities, log } = await fetchRepositoryOpportunities(source);
       if (log.status !== 'success' || log.statusCode !== 200 || opportunities.length === 0) {
-        throw new Error('README fetch/parse failed: ' + (log.error || log.message));
+        throw new Error('Source file fetch/parse failed: ' + (log.error || log.message));
       }
-      if (!log.message.includes(source.branch + '/README')) throw new Error('Fetched an unexpected branch or file');
+      if (!log.message.includes(source.branch + '/' + (source.file || 'README.md'))) throw new Error('Fetched an unexpected branch or file');
       if (opportunities.some((item) => sourceKey(item.sourceRepo) !== key || !isUsefulOpportunity(item))) {
         throw new Error('Parser returned invalid or misattributed leads');
       }

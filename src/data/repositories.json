@@ -1,20 +1,12 @@
 [
   {
-    "owner": "SimplifyJobs",
-    "name": "Summer2027-Internships",
-    "branch": "dev",
-    "category": "Internships",
-    "description": "Maintained 2027 internship board with employer application links.",
-    "focus": "Software, data, product and hardware",
-    "url": "https://github.com/SimplifyJobs/Summer2027-Internships"
-  },
-  {
     "owner": "speedyapply",
     "name": "2027-SWE-College-Jobs",
     "branch": "main",
+    "file": "INTERN_INTL.md",
     "category": "Internships",
-    "description": "Current 2027 software internship and early career postings.",
-    "focus": "Software engineering",
+    "description": "International 2027 software internships listed in INTERN_INTL.md.",
+    "focus": "International software engineering internships",
     "url": "https://github.com/speedyapply/2027-SWE-College-Jobs"
   },
   {
@@ -30,6 +22,7 @@
     "owner": "zapplyjobs",
     "name": "Research-Internships-for-Undergraduates",
     "branch": "main",
+    "locationFromHeadings": true,
     "category": "Research",
     "description": "Undergraduate research internship program directory.",
     "focus": "Undergraduate research",

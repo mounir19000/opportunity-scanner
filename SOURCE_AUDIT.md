@@ -1,13 +1,12 @@
-# Source audit — 5 October 2026
+# Source audit — 10 October 2026
 
-The active manifest is src/data/repositories.json. A source passes the active-feed bar when its canonical GitHub commit feed is reachable, its latest commit is within 180 days, its configured README branch fetches with HTTP 200, and the parser yields useful, correctly attributed destinations. Internship feeds must predominantly link to individual postings.
+The active manifest is src/data/repositories.json. A source passes the active-feed bar when its canonical GitHub commit feed is reachable, its latest commit is within 180 days, its configured branch and file fetch with HTTP 200, and the parser yields useful, correctly attributed destinations. Internship feeds must predominantly link to individual postings.
 
 | Retained source | Branch | Latest public commit | Live parsed leads | Review |
 | --- | --- | --- | ---: | --- |
-| [SimplifyJobs/Summer2027-Internships](https://github.com/SimplifyJobs/Summer2027-Internships) | dev | 2026-10-05 | 1,818 | Current 2027 board; five sampled employer/ATS links returned HTTP 200. |
-| [speedyapply/2027-SWE-College-Jobs](https://github.com/speedyapply/2027-SWE-College-Jobs) | main | 2026-10-04 | 761 | Current role table; five sampled job links returned HTTP 200. Parser now uses Position and Posting, not company homepages. |
+| [speedyapply/2027-SWE-College-Jobs: INTERN_INTL.md](https://github.com/speedyapply/2027-SWE-College-Jobs/blob/main/INTERN_INTL.md) | main | 2026-10-09 | 535 | Only the international internship file is fetched. The parser uses Position and Posting, not company homepages. |
 | [hazratali/awesome-ai-summerschool](https://github.com/hazratali/awesome-ai-summerschool) | main | 2026-10-01 | 3 | Current AI school list; two program sites returned HTTP 200. The ANAIS list URL had a TLS problem, so its lead points to the organizer's working official page. |
-| [zapplyjobs/Research-Internships-for-Undergraduates](https://github.com/zapplyjobs/Research-Internships-for-Undergraduates) | main | 2026-09-15 | 75 | Maintained directory of real undergraduate research programs. This is a program directory, not a live application-status feed; host cycles must be checked individually. |
+| [zapplyjobs/Research-Internships-for-Undergraduates](https://github.com/zapplyjobs/Research-Internships-for-Undergraduates) | main | 2026-10-07 | 75 | Country headings in the README now populate each lead's location. Worldwide groups receive broad labels. Host cycles and eligibility must be checked individually. |
 
 Rejected from the active feed:
 
@@ -21,6 +20,6 @@ Verification commands:
     npm test
     npm run build
 
-The source verifier is read-only and fails if any configured repository is stale, unreachable, misconfigured, or produces no usable leads. The prebuild regenerates the snapshot only when every source succeeds. The last live prebuild fetched all four sources successfully and produced 2,559 deduplicated leads.
+The source verifier is read-only and fails if any configured repository is stale, unreachable, misconfigured, or produces no usable leads. The prebuild regenerates the snapshot only when every source succeeds. The current bundled snapshot has 613 leads from three sources, including 535 from `main/INTERN_INTL.md`.
 
-Repository and destination checks establish source quality at the feed level. They do not prove that every individual application remains open. Official program pages and employers are the authority for that status.
+Repository and destination checks establish source quality at the feed level. An international-list entry does not establish citizenship or work-authorization eligibility, and it does not prove that an application remains open. Official program pages and employers are the authority for those details.

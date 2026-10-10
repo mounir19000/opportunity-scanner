@@ -1,22 +1,22 @@
 [
   {
-    "id": "log_1791192461042_bwvfq",
-    "repo": "SimplifyJobs/Summer2027-Internships",
-    "repoName": "Summer2027-Internships",
-    "repoOwner": "SimplifyJobs",
-    "url": "https://github.com/SimplifyJobs/Summer2027-Internships",
+    "id": "log_1791630282046_goh87",
+    "repo": "zapplyjobs/Research-Internships-for-Undergraduates",
+    "repoName": "Research-Internships-for-Undergraduates",
+    "repoOwner": "zapplyjobs",
+    "url": "https://github.com/zapplyjobs/Research-Internships-for-Undergraduates",
     "status": "success",
     "statusCode": 200,
     "httpStatus": 200,
-    "durationMs": 280,
-    "itemsCount": 1818,
-    "parsedCount": 1818,
+    "durationMs": 145,
+    "itemsCount": 75,
+    "parsedCount": 75,
     "error": null,
-    "message": "Parsed 1818 opportunities from dev/README.md",
-    "timestamp": "2026-10-05T09:27:41.042Z"
+    "message": "Parsed 75 opportunities from main/README.md",
+    "timestamp": "2026-10-10T11:04:42.046Z"
   },
   {
-    "id": "log_1791192461127_6jdzy",
+    "id": "log_1791629921084_oi7ln",
     "repo": "speedyapply/2027-SWE-College-Jobs",
     "repoName": "2027-SWE-College-Jobs",
     "repoOwner": "speedyapply",
@@ -24,12 +24,12 @@
     "status": "success",
     "statusCode": 200,
     "httpStatus": 200,
-    "durationMs": 45,
-    "itemsCount": 761,
-    "parsedCount": 761,
+    "durationMs": 354,
+    "itemsCount": 535,
+    "parsedCount": 535,
     "error": null,
-    "message": "Parsed 761 opportunities from main/README.md",
-    "timestamp": "2026-10-05T09:27:41.127Z"
+    "message": "Parsed 535 opportunities from main/INTERN_INTL.md",
+    "timestamp": "2026-10-10T10:58:41.084Z"
   },
   {
     "id": "log_1791192461192_yq9so",
@@ -46,21 +46,5 @@
     "error": null,
     "message": "Parsed 3 opportunities from main/README.md",
     "timestamp": "2026-10-05T09:27:41.192Z"
-  },
-  {
-    "id": "log_1791192461235_r3a6m",
-    "repo": "zapplyjobs/Research-Internships-for-Undergraduates",
-    "repoName": "Research-Internships-for-Undergraduates",
-    "repoOwner": "zapplyjobs",
-    "url": "https://github.com/zapplyjobs/Research-Internships-for-Undergraduates",
-    "status": "success",
-    "statusCode": 200,
-    "httpStatus": 200,
-    "durationMs": 39,
-    "itemsCount": 75,
-    "parsedCount": 75,
-    "error": null,
-    "message": "Parsed 75 opportunities from main/README.md",
-    "timestamp": "2026-10-05T09:27:41.235Z"
   }
 ]
