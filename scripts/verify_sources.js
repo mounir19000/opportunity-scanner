@@ -36,19 +36,23 @@ async function run() {
       seen.add(key);
       if (source.type === 'website') {
         if (!/^[a-z0-9.-]+$/.test(key) || !source.url.startsWith('https://') || !source.apiUrl.startsWith('https://')) throw new Error('Invalid website source configuration');
-        const { opportunities, log } = await fetchWebSource(source, source.id === 'for9a.com' ? { sampleDetails: 3 } : { samplePages: 1 });
+        const options = source.id === 'for9a.com' ? { sampleDetails: 3 }
+          : source.id === 'weworkremotely.com' ? { sampleFeeds: 1 } : { samplePages: 1 };
+        const { opportunities, log } = await fetchWebSource(source, options);
         if (log.status !== 'success' || !opportunities.length || opportunities.some((item) => sourceKey(item.sourceRepo) !== key || !isUsefulOpportunity(item))) {
           throw new Error('Website sample fetch/parse failed: ' + (log.error || log.message));
         }
         console.log(key + ' | OK | ' + opportunities.length + ' sampled leads');
         continue;
       }
-      if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(key)) throw new Error('Invalid repository key');
-      if (source.url !== 'https://github.com/' + key) throw new Error('Source URL is not canonical');
+      const repoPath = source.owner + '/' + source.name;
+      if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repoPath)
+        || (source.id && source.id !== repoPath + '/' + source.file)) throw new Error('Invalid repository key');
+      if (source.url !== 'https://github.com/' + repoPath) throw new Error('Source URL is not canonical');
       if (!/^[A-Za-z0-9_.-]+$/.test(source.branch || '')) throw new Error('Explicit branch is required');
       if (source.file && !/^[A-Za-z0-9_.-]+\.md$/i.test(source.file)) throw new Error('Invalid configured Markdown file');
 
-      const feed = await fetchFeed('https://github.com/' + key + '/commits/' + source.branch + '.atom');
+      const feed = await fetchFeed('https://github.com/' + repoPath + '/commits/' + source.branch + '.atom');
       if (!feed.includes('Recent Commits to ' + source.name + ':' + source.branch)) throw new Error('Commit feed does not match source');
       const updated = feed.match(/<updated>([^<]+)<\/updated>/)?.[1];
       const updatedAt = new Date(updated);

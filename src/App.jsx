@@ -123,7 +123,7 @@ export default function App() {
     let result;
     if (repo.type === 'website') {
       const { fetchWebSource } = await import('../scripts/webFetcher.js');
-      const options = repo.id === 'for9a.com'
+      const options = repo.id === 'for9a.com' || repo.id === 'weworkremotely.com'
         ? {}
         : { since: new Date(Date.now() - 30 * 86400000).toISOString() };
       result = await fetchWebSource(repo, options);
@@ -132,7 +132,7 @@ export default function App() {
     }
     recordLog(result.log);
     if (result.log.status === 'success') {
-      const items = repo.type === 'website' && repo.id !== 'for9a.com'
+      const items = repo.type === 'website' && !['for9a.com', 'weworkremotely.com'].includes(repo.id)
         ? mergeSourceOpportunities(catalogRef.current.items, repo, result.opportunities)
         : replaceSourceOpportunities(catalogRef.current.items, repo, result.opportunities);
       commitListings(items, repo);
@@ -155,7 +155,7 @@ export default function App() {
     try {
       const result = await refreshSource(repo);
       showToast(result.log.status === 'success'
-        ? repo.type === 'website' && repo.id !== 'for9a.com'
+        ? repo.type === 'website' && !['for9a.com', 'weworkremotely.com'].includes(repo.id)
           ? 'Checked ' + result.log.parsedCount + ' recent posts from ' + repo.name + '; found ' + result.opportunities.length + ' computing leads.'
           : 'Refreshed ' + result.opportunities.length + ' leads from ' + repo.name + '.'
         : 'Could not refresh ' + repo.name + ': ' + (result.log.error || result.log.message),

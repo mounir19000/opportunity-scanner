@@ -28,6 +28,8 @@ test('one search and exact facets filter the source directory', () => {
   assert.deepEqual(filterOpportunities(items, { type: 'Research / REU', location: 'remote' }).map((item) => item.id), ['b']);
   assert.deepEqual(filterOpportunities(items, { repo: 'c/schools' }).map((item) => item.id), ['c']);
   assert.equal(sourceKey({ owner: 'a', name: 'roles' }), 'a/roles');
+  const worldwide = { id: 'wwr', title: 'Remote Engineer', location: 'Remote · Anywhere in the World', type: 'Job', sourceRepo: 'weworkremotely.com' };
+  assert.deepEqual(filterOpportunities([worldwide], { location: 'global' }).map((item) => item.id), ['wwr']);
 });
 
 test('default order keeps more published details first and preserves raw deadline text', () => {

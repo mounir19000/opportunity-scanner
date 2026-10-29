@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import { inferType } from '../src/services/githubFetcher.js';
-import { explicitDate, isUsefulOpportunity, normalizeOpportunity, sourceKey } from '../src/services/opportunityData.js';
+import { dedupeOpportunities, explicitDate, isUsefulOpportunity, normalizeOpportunity, sourceKey } from '../src/services/opportunityData.js';
 
 const TECH = /\b(?:computer science|computer engineering|software(?: engineering| development)?|developer|web development|machine learning|deep learning|artificial intelligence|AI|data science|data engineering|cyber\s*security|information technology|information and communication (?:technology|science)|informatics|robotics|cloud computing|embedded systems?|microelectronics|semiconductor|digital technology|digital sciences?|fintech|blockchain|quantum computing|computational science|bioinformatics|geospatial|geoinformatics|GIS|Google Earth Engine|HPC|IT internship)\b/i;
 const TITLE_TECH = /\b(?:programming|coding|programmer)\b/i;
@@ -26,6 +26,13 @@ const FOR9A_DETAIL_QUERY = `query($id:Int!,$type:OpportunitySection!){
     tags{keyword} category{name} organization{name} fundingType{name}
     country{place{name}} locations{name}}
 }`;
+const WWR_CATEGORY_FEEDS = [
+  'remote-customer-support-jobs', 'remote-product-jobs',
+  'remote-full-stack-programming-jobs', 'remote-back-end-programming-jobs',
+  'remote-front-end-programming-jobs', 'remote-programming-jobs',
+  'remote-sales-and-marketing-jobs', 'remote-management-and-finance-jobs',
+  'remote-design-jobs', 'remote-devops-sysadmin-jobs', 'all-other-remote-jobs',
+];
 
 export function isComputingOpportunity(title, body = '') {
   return TECH.test(title) || TITLE_TECH.test(title) || (OPPORTUNITY.test(title) && TECH.test(body));
@@ -356,6 +363,73 @@ export async function fetchFor9aSource(source, { sampleDetails = 0 } = {}) {
   };
 }
 
+export function parseWeWorkRemotelyFeed(xml, source, today = new Date()) {
+  const $ = cheerio.load(xml, { xmlMode: true });
+  if (!$('rss > channel').length) throw new Error('We Work Remotely returned an invalid RSS feed');
+  const items = [];
+  $('channel > item').each((_, node) => {
+    const entry = $(node);
+    const field = (name) => entry.children(name).first().text().trim();
+    const url = field('guid') || field('link');
+    if (!/^https:\/\/weworkremotely\.com\/remote-jobs\/[^\s]+/i.test(url)) return;
+    const expires = new Date(field('expires_at'));
+    if (!Number.isNaN(expires.getTime()) && expires < today) return;
+    const rawTitle = field('title');
+    const colon = rawTitle.indexOf(': ');
+    const host = colon > 0 ? rawTitle.slice(0, colon).trim() : '';
+    const title = colon > 0 ? rawTitle.slice(colon + 2).trim() : rawTitle;
+    const description = cheerio.load(field('description'));
+    description('script,style,noscript').remove();
+    description('p').first().filter((_, paragraph) => /\bHeadquarters\s*:/i.test(description(paragraph).text())).remove();
+    const summary = compact(textFromHtml(description.root().html()), 550);
+    const region = field('region');
+    const country = field('country').replace(/^\p{Extended_Pictographic}\s*/u, '').trim();
+    const location = region ? `Remote · ${region}` : country ? `Remote · ${country}` : 'Remote';
+    const published = new Date(field('pubDate'));
+    const item = {
+      title, host, category: field('category') || source.category,
+      type: 'Job', location, deadline: '', dates: '', stipend: '',
+      summary, notes: [field('type'), field('skills')].filter(Boolean).join(' · '),
+      applicationUrl: '', sourceUrl: url, url,
+      publishedAt: Number.isNaN(published.getTime()) ? '' : published.toISOString(),
+      sourceRepo: sourceKey(source), discoveredAt: new Date().toISOString(),
+    };
+    if (isUsefulOpportunity(item, today)) items.push(normalizeOpportunity(item));
+  });
+  return items;
+}
+
+export async function fetchWeWorkRemotelySource(source, { sampleFeeds = 0 } = {}) {
+  const started = Date.now();
+  const urls = [source.apiUrl, ...WWR_CATEGORY_FEEDS.map((slug) => `https://weworkremotely.com/categories/${slug}.rss`)];
+  const selected = sampleFeeds ? urls.slice(0, sampleFeeds) : urls;
+  const all = [];
+  let scanned = 0;
+  for (let offset = 0; offset < selected.length; offset += 3) {
+    const batch = await Promise.all(selected.slice(offset, offset + 3).map(async (url) => {
+      const xml = await (await request(url, { headers: { Accept: 'application/rss+xml, application/xml' } })).text();
+      const parsed = parseWeWorkRemotelyFeed(xml, source);
+      const count = (xml.match(/<item>/g) || []).length;
+      return { parsed, count };
+    }));
+    for (const result of batch) {
+      all.push(...result.parsed);
+      scanned += result.count;
+    }
+  }
+  const items = dedupeOpportunities(all);
+  return {
+    opportunities: items,
+    log: { repo: sourceKey(source), repoName: source.name, url: source.url,
+      status: items.length ? 'success' : 'warning', itemsCount: items.length,
+      parsedCount: scanned, statusCode: 200, durationMs: Date.now() - started,
+      message: `Scanned ${scanned} RSS entries across ${selected.length} feeds; retained ${items.length} current remote jobs`,
+      timestamp: new Date().toISOString() },
+  };
+}
+
 export function fetchWebSource(source, options = {}) {
-  return source.id === 'for9a.com' ? fetchFor9aSource(source, options) : fetchWordPressSource(source, options);
+  if (source.id === 'for9a.com') return fetchFor9aSource(source, options);
+  if (source.id === 'weworkremotely.com') return fetchWeWorkRemotelySource(source, options);
+  return fetchWordPressSource(source, options);
 }

@@ -2,7 +2,13 @@
 // Supports: Markdown tables (with/without outer pipes), HTML <table> elements,
 // Markdown bullet lists, Embedded JSON datasets, and configured source files.
 
-import { cleanUnknown, dedupeOpportunities, isUsefulOpportunity, normalizeOpportunity } from './opportunityData.js';
+import { cleanUnknown, dedupeOpportunities, isUsefulOpportunity, normalizeOpportunity, sourceKey } from './opportunityData.js';
+
+export function isUsOnlyLocation(location) {
+  const value = String(location || '').trim();
+  return /\b(?:USA|U\.?S\.?A\.?|United States(?: of America)?)\b/i.test(value)
+    && !/\b(?:Canada|Mexico|Europe|Asia|Africa|Australia|global|worldwide|international|multiple countries)\b|\+\d/i.test(value);
+}
 
 export function cleanText(str) {
   if (!str) return '';
@@ -170,7 +176,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
       const dates = cleanText(datesCell);
       const stipend = [cleanText(stipendCell), cleanText(feeCell)].map(cleanUnknown).filter(Boolean).join(' · ');
 
-      const repoIdentifier = `${repoInfo.owner}/${repoInfo.name}`;
+      const repoIdentifier = sourceKey(repoInfo);
       const id = `${repoInfo.owner}_${repoInfo.name}_${opportunities.length + 1}_${title.slice(0, 18).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
       opportunities.push({
@@ -178,7 +184,7 @@ export function parseMarkdownTable(markdownText, repoInfo) {
         title,
         host: host || '',
         category: repoInfo.category || 'General',
-        type: inferType(title, repoInfo.category),
+        type: repoInfo.listingType || inferType(title, repoInfo.category),
         location,
         deadline,
         dates,
@@ -226,7 +232,7 @@ export function parseHtmlTable(htmlText, repoInfo) {
     }
 
     const title = `${company} - ${role}`;
-    const repoIdentifier = `${repoInfo.owner}/${repoInfo.name}`;
+    const repoIdentifier = sourceKey(repoInfo);
     const id = `${repoInfo.owner}_${repoInfo.name}_${opportunities.length + 1}_${title.slice(0, 18).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
     opportunities.push({
@@ -234,7 +240,7 @@ export function parseHtmlTable(htmlText, repoInfo) {
       title,
       host: company,
       category: repoInfo.category || 'Tech & Software Engineering Internships',
-      type: inferType(role, repoInfo.category),
+      type: repoInfo.listingType || inferType(role, repoInfo.category),
       location,
       deadline: '',
       dates: '',
@@ -284,7 +290,7 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
       continue;
     }
 
-    const repoIdentifier = `${repoInfo.owner}/${repoInfo.name}`;
+    const repoIdentifier = sourceKey(repoInfo);
     const id = `${repoInfo.owner}_${repoInfo.name}_${opportunities.length + 1}_${parsed.text.slice(0, 18).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
     opportunities.push({
@@ -292,7 +298,7 @@ export function parseMarkdownBullets(markdownText, repoInfo) {
       title: parsed.text,
       host: '',
       category: repoInfo.category || 'General Opportunities',
-      type: inferType(parsed.text, repoInfo.category),
+      type: repoInfo.listingType || inferType(parsed.text, repoInfo.category),
       location,
       deadline: '',
       dates: '',
@@ -369,7 +375,7 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
   }
 
   const durationMs = Date.now() - startTime;
-  const repoIdentifier = `${repoOwner}/${repoName}`;
+  const repoIdentifier = sourceKey(repo);
 
   if (!content) {
     const logEntry = {
@@ -399,7 +405,8 @@ export async function fetchRepositoryOpportunities(repo, token = '') {
     opportunities = parseMarkdownBullets(content, repo);
   }
 
-  opportunities = dedupeOpportunities(opportunities.map(normalizeOpportunity).filter((item) => isUsefulOpportunity(item)));
+  opportunities = dedupeOpportunities(opportunities.map(normalizeOpportunity).filter((item) =>
+    isUsefulOpportunity(item) && (!repo.excludeUsOnly || !isUsOnlyLocation(item.location))));
   const isSuccess = opportunities.length > 0;
   const logEntry = {
     id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,

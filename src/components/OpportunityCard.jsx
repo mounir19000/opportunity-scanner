@@ -2,16 +2,18 @@ import React from 'react';
 import { ArrowUpRight, Bookmark, BookmarkCheck, CalendarDays, MapPin, Wallet } from 'lucide-react';
 import { sourceKey } from '../services/opportunityData';
 import { deadlineState } from '../services/filters';
+import reposData from '../data/repositories.json';
 
 export default function OpportunityCard({ opportunity, isSaved, onToggleSave, onSelect }) {
   const source = sourceKey(opportunity.sourceRepo);
+  const sourceLabel = reposData.find((entry) => sourceKey(entry) === source)?.displayName || source;
   const deadline = deadlineState(opportunity.deadline);
   return (
     <article className="scanner-result-card">
       <div className="scanner-result-main">
         <div className="scanner-result-topline">
           <span className="scanner-type">{opportunity.type || opportunity.category || 'Opportunity'}</span>
-          <span className="scanner-source">{source}</span>
+          <span className="scanner-source">{sourceLabel}</span>
         </div>
         <button className="scanner-result-title" onClick={() => onSelect(opportunity)} type="button">{opportunity.title}</button>
         <p className="scanner-result-host">{opportunity.host || 'Host not listed'}</p>

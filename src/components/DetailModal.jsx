@@ -39,7 +39,7 @@ export default function DetailModal({ opportunity, isOpen, onClose, isSaved, sav
   if (!isOpen || !opportunity) return null;
   const repo = sourceKey(opportunity.sourceRepo);
   const source = reposData.find((item) => sourceKey(item) === repo);
-  const sourceName = source?.name || repo;
+  const sourceName = source?.displayName || source?.name || repo;
   const sourceUrl = opportunity.sourceUrl || (source?.file ? source.url + '/blob/' + source.branch + '/' + source.file : source?.url || 'https://github.com/' + repo);
   const copy = async () => {
     try { await navigator.clipboard.writeText(opportunity.url); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* Clipboard may be unavailable. */ }

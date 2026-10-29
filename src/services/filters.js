@@ -81,7 +81,7 @@ function matchesLocation(value, selected) {
   if (selected === 'us') return /\b(us|usa|u\.s\.|united states)\b/.test(location);
   if (selected === 'europe') return /\b(europe|germany|france|italy|spain|switzerland|netherlands|united kingdom|uk|belgium|sweden|norway|denmark|finland|austria|ireland|poland)\b/.test(location);
   if (selected === 'asia') return /\b(asia|japan|china|singapore|korea|taiwan|india|hong kong|pakistan|malaysia)\b/.test(location);
-  if (selected === 'global') return /\b(global|worldwide|international|multiple countries)\b/.test(location);
+  if (selected === 'global') return /\b(global|worldwide|international|multiple countries|anywhere in the world)\b/.test(location);
   return false;
 }
 

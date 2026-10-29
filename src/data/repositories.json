@@ -10,6 +10,44 @@
     "url": "https://github.com/speedyapply/2027-SWE-College-Jobs"
   },
   {
+    "id": "speedyapply/2027-AI-College-Jobs/INTERN_INTL.md",
+    "owner": "speedyapply",
+    "name": "2027-AI-College-Jobs",
+    "displayName": "2027 AI Internships · International",
+    "branch": "main",
+    "file": "INTERN_INTL.md",
+    "category": "Internships",
+    "listingType": "Internship",
+    "excludeUsOnly": true,
+    "description": "International AI and machine learning internships from the 2027 college jobs list.",
+    "focus": "International AI internships",
+    "url": "https://github.com/speedyapply/2027-AI-College-Jobs"
+  },
+  {
+    "id": "speedyapply/2027-AI-College-Jobs/NEW_GRAD_INTL.md",
+    "owner": "speedyapply",
+    "name": "2027-AI-College-Jobs",
+    "displayName": "2027 AI New Graduate Jobs · International",
+    "branch": "main",
+    "file": "NEW_GRAD_INTL.md",
+    "category": "Jobs",
+    "listingType": "Job",
+    "excludeUsOnly": true,
+    "description": "International AI and machine learning new graduate jobs from the 2027 college jobs list.",
+    "focus": "International AI jobs",
+    "url": "https://github.com/speedyapply/2027-AI-College-Jobs"
+  },
+  {
+    "id": "weworkremotely.com",
+    "name": "We Work Remotely",
+    "type": "website",
+    "category": "Remote jobs",
+    "description": "Current remote jobs from We Work Remotely's public RSS feeds, with direct source attribution.",
+    "focus": "Remote jobs across all categories and regions",
+    "url": "https://weworkremotely.com/",
+    "apiUrl": "https://weworkremotely.com/remote-jobs.rss"
+  },
+  {
     "owner": "hazratali",
     "name": "awesome-ai-summerschool",
     "branch": "main",

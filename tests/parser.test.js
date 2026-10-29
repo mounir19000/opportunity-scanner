@@ -103,3 +103,32 @@ test('a configured source file is fetched without reading README or other files'
     globalThis.fetch = originalFetch;
   }
 });
+
+test('AI international files keep internship and job types and exclude explicit US-only rows', async () => {
+  const originalFetch = globalThis.fetch;
+  const source = {
+    id: 'speedyapply/2027-AI-College-Jobs/NEW_GRAD_INTL.md',
+    owner: 'speedyapply', name: '2027-AI-College-Jobs', branch: 'main',
+    file: 'NEW_GRAD_INTL.md', category: 'Jobs', listingType: 'Job', excludeUsOnly: true,
+    url: 'https://github.com/speedyapply/2027-AI-College-Jobs',
+  };
+  const markdown = [
+    '| Company | Position | Location | Posting | Age |',
+    '|---|---|---|---|---|',
+    '| Example | AI Research Engineer Graduate | Paris, France | [Apply](https://example.com/jobs/fr) | 1d |',
+    '| Example | AI Research Engineer Graduate | Remote - USA | [Apply](https://example.com/jobs/us) | 1d |',
+    '| Example | AI Research Engineer Graduate | Canada + USA | [Apply](https://example.com/jobs/mixed) | 1d |',
+  ].join('\n');
+  try {
+    globalThis.fetch = async () => ({ ok: true, status: 200, text: async () => markdown });
+    const grad = await fetchRepositoryOpportunities(source);
+    assert.deepEqual(grad.opportunities.map((item) => item.url), [
+      'https://example.com/jobs/fr', 'https://example.com/jobs/mixed',
+    ]);
+    assert.ok(grad.opportunities.every((item) => item.type === 'Job' && item.sourceRepo === source.id));
+    const intern = await fetchRepositoryOpportunities({ ...source, id: 'speedyapply/2027-AI-College-Jobs/INTERN_INTL.md', file: 'INTERN_INTL.md', listingType: 'Internship' });
+    assert.ok(intern.opportunities.every((item) => item.type === 'Internship'));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

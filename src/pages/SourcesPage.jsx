@@ -42,7 +42,7 @@ export default function SourcesPage({ onFetchRepo, onSyncAll, onRetryFailed, onC
             const sourceUrl = repo.file ? repo.url + '/blob/' + repo.branch + '/' + repo.file : repo.url;
             return <article className="sch-directory-card" key={key}>
               <div className="sch-directory-card-top"><span>{String(index + 1).padStart(2, '0')} / {repo.category}</span><strong>{counts.get(key) || 0} leads</strong></div>
-              <h3>{repo.name}</h3>
+              <h3>{repo.displayName || repo.name}</h3>
               <p>{repo.description}</p>
               <div className="sch-directory-focus">{repo.focus}</div>
               <div className="sch-directory-card-actions">

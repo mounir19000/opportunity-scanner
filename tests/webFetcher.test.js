@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isComputingOpportunity, parseFor9aOpportunity, parseWordPressPost } from '../scripts/webFetcher.js';
+import { isComputingOpportunity, parseFor9aOpportunity, parseWeWorkRemotelyFeed, parseWordPressPost } from '../scripts/webFetcher.js';
 
 const source = {
   id: 'globalsouthopportunities.com',
@@ -62,4 +62,29 @@ test('For9a import keeps computing details and rejects unrelated application lin
   assert.match(item.benefits, /living costs/);
   assert.match(item.howToApply, /Apply with a CV/);
   assert.equal(parseFor9aOpportunity({ ...opportunity, closed: true }), null);
+});
+
+test('We Work Remotely RSS keeps active jobs with their region and original listing links', () => {
+  const source = { id: 'weworkremotely.com', name: 'We Work Remotely', category: 'Remote jobs' };
+  const xml = `<rss><channel>
+    <item><title>Example Labs: Software Engineer</title><region>Anywhere in the World</region>
+      <category>Programming</category><type>Full-Time</type><skills>React, APIs</skills>
+      <description>&lt;p&gt;&lt;strong&gt;Headquarters:&lt;/strong&gt; Paris&lt;/p&gt;&lt;p&gt;Build cloud products.&lt;/p&gt;</description>
+      <pubDate>Wed, 28 Oct 2026 10:00:00 +0000</pubDate><expires_at>Sat, 28 Nov 2026 10:00:00 +0000</expires_at>
+      <guid>https://weworkremotely.com/remote-jobs/example-labs-software-engineer</guid></item>
+    <item><title>Old Co: Old Job</title><region>USA Only</region><expires_at>Tue, 01 Jan 2020 00:00:00 +0000</expires_at>
+      <guid>https://weworkremotely.com/remote-jobs/old-co-old-job</guid></item>
+  </channel></rss>`;
+  const items = parseWeWorkRemotelyFeed(xml, source, new Date('2026-10-29T00:00:00Z'));
+  assert.equal(items.length, 1);
+  assert.equal(items[0].title, 'Software Engineer');
+  assert.equal(items[0].host, 'Example Labs');
+  assert.equal(items[0].location, 'Remote · Anywhere in the World');
+  assert.equal(items[0].type, 'Job');
+  assert.equal(items[0].sourceRepo, source.id);
+  assert.equal(items[0].url, 'https://weworkremotely.com/remote-jobs/example-labs-software-engineer');
+  assert.equal(items[0].summary, 'Build cloud products.');
+  assert.match(items[0].notes, /Full-Time/);
+  assert.equal(items[0].deadline, '');
+  assert.throws(() => parseWeWorkRemotelyFeed('<html>not RSS</html>', source), /invalid RSS/);
 });
