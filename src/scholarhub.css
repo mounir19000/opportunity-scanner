@@ -214,6 +214,19 @@
 .sch-detail-modal :focus-visible { outline: 3px solid var(--sch-main); outline-offset: 3px; }
 .sch-page :focus-visible, .sch-nav :focus-visible { outline: 3px solid var(--sch-main); outline-offset: 2px; }
 
+.sch-welcome-modal { width: min(100%, 610px); }
+.sch-welcome-header { padding: 22px 29px 29px; }
+.sch-welcome-badge { display: inline-flex; align-items: center; gap: 7px; margin: 22px 0 15px; padding: 7px 10px; border: 2px solid #111; background: var(--sch-lime); color: #111; font-size: 10px; font-weight: 800; letter-spacing: .08em; box-shadow: 3px 3px 0 #111; }
+.sch-welcome-header h2 { max-width: 490px; font-size: clamp(30px, 4.5vw, 46px); }
+.sch-welcome-header p { max-width: 475px; margin-top: 13px; font-size: 14px; font-weight: 600; }
+.sch-welcome-body { padding: 27px 29px 24px; }
+.sch-welcome-callout { padding: 18px 20px; border: 2px solid var(--sch-border); background: var(--sch-bg); box-shadow: 4px 4px 0 var(--sch-border); }
+.sch-welcome-callout strong { display: block; margin-bottom: 8px; font: 17px/1.2 'Archivo Black', 'Arial Black', sans-serif; letter-spacing: -.04em; }
+.sch-welcome-callout p, .sch-welcome-note { margin: 0; font-size: 13px; line-height: 1.6; }
+.sch-welcome-callout p { color: var(--sch-ink); }
+.sch-welcome-note { margin-top: 20px; color: var(--sch-muted); }
+.sch-welcome-actions .sch-button { min-height: 43px; padding-inline: 15px; font-size: 12px; }
+
 @media (max-width: 640px) {
   .sch-detail-backdrop { align-items: end; padding: 0; }
   .sch-detail-modal { width: 100%; max-height: 94vh; max-height: 94dvh; border-right: 0; border-bottom: 0; border-left: 0; box-shadow: none; }
@@ -224,6 +237,10 @@
   .sch-detail-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 13px 19px 18px; }
   .sch-detail-actions .sch-button-primary { margin-left: 0; }
   .sch-detail-actions a { grid-column: 1 / -1; }
+  .sch-welcome-header { padding: 17px 20px 22px; }
+  .sch-welcome-body { padding: 21px 20px 23px; }
+  .sch-welcome-actions { grid-template-columns: 1fr; }
+  .sch-welcome-actions .sch-button { width: 100%; }
 }
 
 @media (max-width: 960px) {

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './scholarhub.css';
 import Navbar from './components/Navbar';
 import DetailModal from './components/DetailModal';
+import WelcomeModal from './components/WelcomeModal';
 import ExplorerPage from './pages/ExplorerPage';
 import SourcesPage from './pages/SourcesPage';
 import SavedPage from './pages/SavedPage';
@@ -45,6 +46,7 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastFetchedRepo, setLastFetchedRepo] = useState(null);
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(true);
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
@@ -271,6 +273,15 @@ export default function App() {
     showToast('Refresh history cleared.');
   };
 
+  const dismissWelcome = useCallback(() => {
+    setShowWelcome(false);
+  }, []);
+
+  const refreshFromWelcome = () => {
+    dismissWelcome();
+    handleSyncAll();
+  };
+
   const opportunities = catalog.items;
   const savedIds = useMemo(() => new Set(savedItems.map((item) => item.id)), [savedItems]);
   const currentById = useMemo(() => new Map(opportunities.map((item) => [item.id, item])), [opportunities]);
@@ -295,6 +306,7 @@ export default function App() {
         <span>Made by <a href="https://github.com/mounir19000" target="_blank" rel="noopener noreferrer">Mostefai Mounir</a> with love and vibes.</span>
       </footer>
       {selectedOpportunity && <DetailModal opportunity={selectedOpportunity} isOpen onClose={() => setSelectedOpportunity(null)} isSaved={savedIds.has(selectedOpportunity.id)} savedDetails={savedItems.find((item) => item.id === selectedOpportunity.id)} onToggleSave={handleToggleSave} onUpdateStatus={handleUpdateStatus} />}
+      {showWelcome && !loading && <WelcomeModal onClose={dismissWelcome} onRefresh={refreshFromWelcome} />}
       {toast && <div className="scanner-toast" role="status">
         {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
         {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />}

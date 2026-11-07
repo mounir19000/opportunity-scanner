@@ -1,7 +1,13 @@
 # Opportunity Scanner
 
-A web app that brings computing opportunities and remote jobs from nine public sources into one searchable directory.
+**[Visit the live website](https://global-opportunity-scanner.netlify.app/)**
 
-Run `npm install` and `npm run dev` locally. `npm run prebuild-data` refreshes the deployable `public/opportunities.json` snapshot from all configured sources. `npm run verify-sources` checks that each source is reachable and yields usable listings. The production build reads the committed snapshot; the scheduled GitHub Actions job refreshes it every three days.
+Opportunity Scanner brings opportunities from nine public sources into one searchable directory. Explore internships, remote jobs, research programmes, scholarships, summer schools, and other learning opportunities without checking each source separately.
 
-The browser can refresh all nine sources directly. A manual WordPress refresh checks the last 30 days of posts and merges new listings with the published directory; For9a refresh checks its active listings. We Work Remotely refresh reads its public RSS feeds, and the two AI college jobs sources read only their international internship and new graduate files. The scheduled snapshot job still scans the full recent WordPress archives every three days. See [SOURCE_AUDIT.md](SOURCE_AUDIT.md) for coverage and limits.
+You can search and filter listings by type, location, and source. Open any listing to see its details and visit the original page. Save interesting opportunities and keep track of your applications in your browser.
+
+## Staying up to date
+
+The shared directory is updated **every week**. If you want to check for new listings sooner, click **Refresh feeds** at the top of the website. This checks the sources for your browser and may take a few minutes; the weekly update is what everyone sees.
+
+Always confirm deadlines, eligibility, and availability on the original listing before applying.

@@ -23,7 +23,7 @@ export default function SourcesPage({ onFetchRepo, onSyncAll, onRetryFailed, onC
         eyebrow="THE SOURCE DESK"
         title="Small list."
         accent="Better signal."
-        description="These sources provide the leads in Explore. Website refresh checks recent posts or active listings; the scheduled snapshot scans the full recent archive. Confirm eligibility and dates on each original page."
+        description="These sources provide the leads in Explore. Website refresh checks recent posts or active listings; the weekly snapshot scans the full recent archive. Confirm eligibility and dates on each original page."
         metric={reposData.length.toLocaleString()}
         metricLabel="tracked sources"
       />
