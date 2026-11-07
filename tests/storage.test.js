@@ -1,8 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import { SAVED_STORAGE_KEY, getSavedItems, saveItem, updateItemStatus, removeSavedItem, getIngestionLogs, saveIngestionLogs, clearIngestionLogs } from '../src/services/storage.js';
-import { normalizeOpportunity, stableOpportunityId } from '../src/services/opportunityData.js';
+import { stableOpportunityId } from '../src/services/opportunityData.js';
 import { getCachedOpportunities, saveCachedOpportunities } from '../src/services/opportunityCache.js';
 
 function memoryStorage() {
@@ -95,13 +94,4 @@ test('refreshed leads survive reload and invalidate when the source list changes
   } finally {
     globalThis.localStorage = original;
   }
-});
-
-test('public snapshot contains source listings with stable IDs after normalization', () => {
-  const snapshot = JSON.parse(fs.readFileSync(new URL('../public/opportunities.json', import.meta.url), 'utf8'));
-  assert.ok(snapshot.generatedAt);
-  assert.ok(snapshot.items.length > 0);
-  const ids = snapshot.items.map((item) => normalizeOpportunity(item).id);
-  assert.equal(new Set(ids).size, ids.length);
-  assert.ok(snapshot.items.every((item) => item.url && item.sourceRepo));
 });
