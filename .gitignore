@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 PLAN.md
+public/opportunities.json
 
 # Editor directories and files
 .vscode/*

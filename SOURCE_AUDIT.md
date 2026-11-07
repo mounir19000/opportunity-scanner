@@ -1,8 +1,8 @@
 # Source audit — 29 October 2026
 
-The active source list is `src/data/repositories.json`. The deployable data is `public/opportunities.json`. The importer keeps computing and closely related opportunities, rejects known past deadlines, and saves the details each source actually publishes: summary, host, location, dates, funding, eligibility, benefits, application instructions, original article, and an application link when one can be identified.
+The active source list is `src/data/repositories.json`. The deployable data is generated as `public/opportunities.json` during the Netlify build and is not committed. The importer keeps computing and closely related opportunities, rejects known past deadlines, and saves the details each source actually publishes: summary, host, location, dates, funding, eligibility, benefits, application instructions, original article, and an application link when one can be identified.
 
-| Source | Import path | Current leads | Notes |
+| Source | Import path | Leads at 29 October audit | Notes |
 | --- | --- | ---: | --- |
 | [speedyapply/2027-SWE-College-Jobs](https://github.com/speedyapply/2027-SWE-College-Jobs/blob/main/INTERN_INTL.md) | `main/INTERN_INTL.md` | 655 | International software internship file; individual posting links. |
 | [speedyapply/2027-AI-College-Jobs internships](https://github.com/speedyapply/2027-AI-College-Jobs/blob/main/INTERN_INTL.md) | `main/INTERN_INTL.md` | 655 | International AI internships only; explicit US-only locations are rejected. |
@@ -23,6 +23,6 @@ Verification commands:
     npm test
     npm run build
 
-The source verifier samples each website and checks the GitHub repositories. The prebuild preserves the previous snapshot if any configured source fails or yields no usable leads. The resulting snapshot has 3,046 unique leads from nine sources.
+The source verifier samples each website and checks the GitHub repositories. The prebuild requires every configured source to succeed and leaves an existing local snapshot untouched if a source fails. The generated listing count varies with the sources.
 
 Previously rejected GitHub sources remain excluded: `karanwxliaa/Research-for-UG-Students` was stale, and `suco-gt/HPC-Internships` had broken and overly broad destination links.

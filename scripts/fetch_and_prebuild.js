@@ -11,7 +11,9 @@ const sources = JSON.parse(fs.readFileSync(dataPath('repositories.json'), 'utf8'
 const snapshotPath = path.join(root, 'public/opportunities.json');
 
 async function run() {
-  const previousSnapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+  const previousSnapshot = fs.existsSync(snapshotPath)
+    ? JSON.parse(fs.readFileSync(snapshotPath, 'utf8'))
+    : { items: [] };
   const previousItems = Array.isArray(previousSnapshot) ? previousSnapshot : previousSnapshot.items || [];
   const firstSeenByUrl = new Map(previousItems.map((item) => [canonicalUrl(item.url), item.discoveredAt]));
   const all = [];
